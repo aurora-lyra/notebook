@@ -175,30 +175,36 @@ function EditorToolbar({ editor, fileInputRef }) {
 }
 
 /**
- * TipTap editor with fixed top toolbar.
+ * TipTap editor — FULLY UNCONTROLLED.
+ *
+ * Content is injected exactly once on mount. After that, the editor owns its
+ * own state. No external prop can overwrite the content while the user is
+ * editing. This eliminates the "data rollback" bug caused by auto-save
+ * feedback loops.
  *
  * Props:
- *   - content: TipTap JSON content (only used on initial mount / entry switch)
- *   - onUpdate: (json) => void — called with editor JSON after 1.5s debounce
+ *   - content: TipTap JSON — used ONLY on initial mount
+ *   - onUpdate: (json) => void — fires immediately on every change (no debounce here)
+ *   - onBlur: () => void — fires when editor loses focus (for immediate save)
  *   - placeholder: string
  *   - autoFocus: boolean
  */
 export default function TipTapEditor({
   content,
   onUpdate,
+  onBlur,
   placeholder = '开始书写…',
   autoFocus = false,
 }) {
-  const debounceRef = useRef(null);
   const onUpdateRef = useRef(onUpdate);
+  const onBlurRef = useRef(onBlur);
   const isComposingRef = useRef(false);
-  const lastContentRef = useRef(content);
+  const isInitialLoadedRef = useRef(false);
   const fileInputRef = useRef(null);
 
-  // Keep callback ref in sync without causing re-renders
-  useEffect(() => {
-    onUpdateRef.current = onUpdate;
-  }, [onUpdate]);
+  // Keep callback refs in sync without causing re-renders
+  useEffect(() => { onUpdateRef.current = onUpdate; }, [onUpdate]);
+  useEffect(() => { onBlurRef.current = onBlur; }, [onBlur]);
 
   const editor = useEditor({
     extensions: [
@@ -209,6 +215,7 @@ export default function TipTapEditor({
       Image.configure({ inline: false, allowBase64: true }),
       Underline,
     ],
+    // Initial content — only used at creation time
     content: content || undefined,
     autofocus: autoFocus,
     editorProps: {
@@ -218,8 +225,6 @@ export default function TipTapEditor({
       handleDOMEvents: {
         compositionstart: () => {
           isComposingRef.current = true;
-          // Cancel any pending save during IME composition
-          clearTimeout(debounceRef.current);
           return false;
         },
         compositionend: () => {
@@ -249,36 +254,32 @@ export default function TipTapEditor({
       },
     },
     onUpdate: ({ editor }) => {
-      // Never trigger save during IME composition
+      // Never fire during IME composition
       if (isComposingRef.current) return;
-
-      // Debounce: only save after user stops typing for 1.5s
-      clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        onUpdateRef.current?.(editor.getJSON());
-      }, 1500);
+      // Fire immediately — debounce is handled by the parent (DiaryEditor)
+      onUpdateRef.current?.(editor.getJSON());
+    },
+    onBlur: () => {
+      // Notify parent for immediate save on blur
+      onBlurRef.current?.();
     },
   });
 
-  // Sync content ONLY on initial mount (editor ready) or entry switch.
-  // Never re-syncs during editing — the editor owns its own state.
+  // ─── UNCONTROLLED: inject content exactly once, then never again ───
   useEffect(() => {
-    if (!editor || isComposingRef.current) return;
-    if (lastContentRef.current === content) return;
+    if (!editor) return;
+    if (isInitialLoadedRef.current) return; // already loaded — reject all future content
+    if (!content) return;
 
-    lastContentRef.current = content;
+    isInitialLoadedRef.current = true;
+    editor.commands.setContent(content);
+  }, [editor]); // deliberately NOT depending on `content`
 
-    if (content) {
-      const current = editor.getJSON();
-      if (JSON.stringify(current) !== JSON.stringify(content)) {
-        editor.commands.setContent(content);
-      }
-    }
-  }, [editor, content]);
-
-  // Cleanup debounce timer on unmount
+  // Cleanup on unmount
   useEffect(() => {
-    return () => clearTimeout(debounceRef.current);
+    return () => {
+      isInitialLoadedRef.current = false;
+    };
   }, []);
 
   // Handle file input change (toolbar upload button)
