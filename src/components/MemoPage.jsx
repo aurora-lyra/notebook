@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, memo } from 'react';
+import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { Plus, CheckSquare, Search } from 'lucide-react';
 import InlineChecklist from './InlineChecklist';
@@ -249,20 +250,28 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
       ) : (
         <div className="flex-1 overflow-y-auto">
           {entries.map((entry) => (
-            <SwipeableRow
+            <motion.div
               key={entry.id}
-              onPin={() => handlePin(entry.id)}
-              onDelete={() => handleDelete(entry.id)}
-              onFavorite={() => handleFavorite(entry.id)}
-              isPinned={entry.pinned}
-              isFavorited={entry.favorited}
+              layout
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
             >
-              <MemoItem
-                entry={entry}
-                isActive={activeId === entry.id}
-                onSelect={setActiveId}
-              />
-            </SwipeableRow>
+              <SwipeableRow
+                onPin={() => handlePin(entry.id)}
+                onDelete={() => handleDelete(entry.id)}
+                onFavorite={() => handleFavorite(entry.id)}
+                isPinned={entry.pinned}
+                isFavorited={entry.favorited}
+              >
+                <MemoItem
+                  entry={entry}
+                  isActive={activeId === entry.id}
+                  onSelect={setActiveId}
+                />
+              </SwipeableRow>
+            </motion.div>
           ))}
         </div>
       )}

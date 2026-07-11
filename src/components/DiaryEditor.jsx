@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { ChevronLeft, Download } from 'lucide-react';
 import TipTapEditor from './TipTapEditor';
@@ -57,42 +58,55 @@ function CapsuleSelector({ label, items, value, onChange }) {
         )}
       </button>
 
+      <AnimatePresence>
       {open && (
-        <div className="absolute top-full left-0 mt-2 z-30
-          bg-zinc-900/90 border border-white/[0.06] backdrop-blur-xl rounded-2xl
-          px-2 py-2 flex items-center gap-1
-          shadow-[0_8px_30px_rgba(0,0,0,0.5)]
-          animate-in fade-in slide-in-from-top-1 duration-200"
+        <motion.div
+          initial={{ opacity: 0, y: -8, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -8, scale: 0.95 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+          className="absolute top-full left-0 mt-2 z-30
+            bg-zinc-900/90 border border-white/[0.06] backdrop-blur-xl rounded-2xl
+            px-2 py-2 flex items-center gap-1
+            shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
         >
-          {items.map((item) => {
+          {items.map((item, i) => {
             const isActive = value === item.key;
             return (
-              <button
+              <motion.button
                 key={item.key}
+                initial={{ opacity: 0, scale: 0.7 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.03, type: 'spring', stiffness: 500, damping: 25 }}
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.92 }}
                 onClick={() => {
                   onChange(isActive ? null : item.key);
                   setOpen(false);
                 }}
                 title={item.label}
                 className={`relative flex items-center justify-center w-9 h-9 rounded-full
-                  transition-all duration-200
                   ${isActive
-                    ? 'bg-white/[0.08] scale-110'
-                    : 'hover:bg-white/[0.04] hover:scale-105 opacity-60 hover:opacity-100'
+                    ? 'bg-white/[0.08]'
+                    : 'hover:bg-white/[0.04] opacity-60 hover:opacity-100'
                   }`}
               >
                 <span className="text-lg">{item.emoji}</span>
                 {isActive && item.color && (
-                  <div
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 600, damping: 20 }}
                     className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full"
                     style={{ backgroundColor: item.color }}
                   />
                 )}
-              </button>
+              </motion.button>
             );
           })}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

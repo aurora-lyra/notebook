@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect, memo } from 'react';
+import { motion } from 'framer-motion';
 import { format, isPast, isToday, addDays, startOfDay } from 'date-fns';
 import { Bell, X } from 'lucide-react';
 
@@ -133,15 +134,25 @@ const ChecklistRow = memo(function ChecklistRow({
   const dueLabel = formatDueLabel(todo.dueAt);
 
   return (
-    <div className="checklist-row group">
-      {/* Checkbox */}
-      <button
+    <motion.div
+      className="checklist-row group"
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+    >
+      {/* Checkbox — spring tap + check animation */}
+      <motion.button
         onClick={handleToggle}
+        whileTap={{ scale: 0.8 }}
         className={`checklist-checkbox ${todo.done ? 'checked' : ''}`}
         aria-label={todo.done ? '标记为未完成' : '标记为已完成'}
       >
         {todo.done && (
-          <svg
+          <motion.svg
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 600, damping: 20 }}
             viewBox="0 0 12 12"
             className="w-2.5 h-2.5"
             fill="none"
@@ -151,9 +162,9 @@ const ChecklistRow = memo(function ChecklistRow({
             strokeLinejoin="round"
           >
             <polyline points="2 6 5 9 10 3" />
-          </svg>
+          </motion.svg>
         )}
-      </button>
+      </motion.button>
 
       {/* Text */}
       <div className="flex-1 min-w-0">
@@ -243,7 +254,7 @@ const ChecklistRow = memo(function ChecklistRow({
           <X size={12} />
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 });
 

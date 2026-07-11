@@ -581,16 +581,16 @@ body {
    ======================================== */
 
 .immersive-sidebar {
-  transition: all 500ms cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
+  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 500ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+  transform-origin: left center;
 }
 
 .immersive-sidebar.collapsed {
-  width: 0 !important;
+  transform: translateX(-100%) scaleX(0.95);
   opacity: 0;
-  padding: 0;
-  margin: 0;
-  border: none;
+  pointer-events: none;
 }
 
 /* ========================================
