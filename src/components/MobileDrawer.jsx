@@ -14,6 +14,7 @@ import {
   CloudOff,
   User,
   LogOut,
+  Settings,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -50,6 +51,7 @@ export default function MobileDrawer({
   folders = [],
   user = null,
   onSignOut,
+  onChangePassword,
   isDark = false,
   onToggleTheme,
 }) {
@@ -227,13 +229,24 @@ export default function MobileDrawer({
                   {user.email}
                 </span>
               </div>
-              <button
-                onClick={onSignOut}
-                title="退出登录"
-                className="p-1 rounded hover:bg-surface-active text-ink-tertiary hover:text-ink transition-colors"
-              >
-                <LogOut size={13} />
-              </button>
+              <div className="flex items-center gap-0.5">
+                {onChangePassword && (
+                  <button
+                    onClick={() => { onChangePassword(); onClose(); }}
+                    title="修改密码"
+                    className="p-1 rounded hover:bg-surface-active text-ink-tertiary hover:text-ink transition-colors"
+                  >
+                    <Settings size={13} />
+                  </button>
+                )}
+                <button
+                  onClick={onSignOut}
+                  title="退出登录"
+                  className="p-1 rounded hover:bg-surface-active text-ink-tertiary hover:text-ink transition-colors"
+                >
+                  <LogOut size={13} />
+                </button>
+              </div>
             </div>
           ) : null}
         </div>

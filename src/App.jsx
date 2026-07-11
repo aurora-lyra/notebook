@@ -9,10 +9,12 @@ import AuthScreen from './components/AuthScreen';
 import MobileHeader from './components/MobileHeader';
 import MobileDrawer from './components/MobileDrawer';
 import FAB from './components/FAB';
+import ChangePasswordModal from './components/ChangePasswordModal';
 import { useEntries, useEntry } from './hooks/useEntries';
 import { useAuth } from './hooks/useAuth';
 import { useSync } from './hooks/useSync';
 import { useTheme } from './hooks/useTheme';
+import { supabase } from './lib/supabase';
 import * as db from './lib/db';
 
 /**
@@ -45,6 +47,7 @@ export default function App() {
   } = useAuth();
 
   const [skipAuth, setSkipAuth] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const isAuthed = !!user || skipAuth;
 
   /* ---- Sync ---- */
@@ -147,6 +150,25 @@ export default function App() {
     [remove, activeEntryId, onLocalChange],
   );
 
+  const handleChangePassword = useCallback(async (currentPassword, newPassword) => {
+    // First verify current password by re-authenticating
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+    if (signInError) {
+      return { error: '当前密码不正确' };
+    }
+    // Update password
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+    if (updateError) {
+      return { error: updateError.message || '密码修改失败' };
+    }
+    return {};
+  }, [user]);
+
   /* ---- Shared sidebar props ---- */
   const sidebarProps = {
     activeView,
@@ -158,6 +180,7 @@ export default function App() {
     onSearchChange: setSearchQuery,
     user,
     onSignOut: signOut,
+    onChangePassword: user ? () => setShowChangePassword(true) : undefined,
     isDark,
     onToggleTheme: toggleTheme,
   };
@@ -209,6 +232,13 @@ export default function App() {
           />
           <DiaryPage onLocalChange={onLocalChange} syncVersion={syncVersion} />
         </div>
+
+        <ChangePasswordModal
+          open={showChangePassword}
+          onClose={() => setShowChangePassword(false)}
+          onSubmit={handleChangePassword}
+          onSignOut={signOut}
+        />
       </div>
     );
   }
@@ -249,6 +279,13 @@ export default function App() {
           onNewTask={() => {
             // Focus is handled by MemoPage internally
           }}
+        />
+
+        <ChangePasswordModal
+          open={showChangePassword}
+          onClose={() => setShowChangePassword(false)}
+          onSubmit={handleChangePassword}
+          onSignOut={signOut}
         />
       </div>
     );
@@ -331,6 +368,13 @@ export default function App() {
         onNewTask={() => {
           setActiveView('memo');
         }}
+      />
+
+      <ChangePasswordModal
+        open={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+        onSubmit={handleChangePassword}
+        onSignOut={signOut}
       />
     </div>
   );
