@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect, useRef, memo } from 'react';
 import { format } from 'date-fns';
 import { Plus, BookOpen, Search, Star, Pin, Upload } from 'lucide-react';
 import DiaryEditor from './DiaryEditor';
+import SwipeableRow from './SwipeableRow';
 import { useEntries } from '../hooks/useEntries';
 import { parse } from '../lib/markdown';
 
@@ -143,6 +144,28 @@ export default function DiaryPage({ onLocalChange, onEditingChange, syncVersion 
     [remove, activeId, onLocalChange],
   );
 
+  const handlePin = useCallback(
+    (id) => {
+      const entry = entries.find((e) => e.id === id);
+      if (entry) {
+        update(id, { pinned: !entry.pinned });
+        onLocalChange?.();
+      }
+    },
+    [entries, update, onLocalChange],
+  );
+
+  const handleFavorite = useCallback(
+    (id) => {
+      const entry = entries.find((e) => e.id === id);
+      if (entry) {
+        update(id, { favorited: !entry.favorited });
+        onLocalChange?.();
+      }
+    },
+    [entries, update, onLocalChange],
+  );
+
   const handleImport = useCallback(
     (e) => {
       const file = e.target.files?.[0];
@@ -251,12 +274,20 @@ export default function DiaryPage({ onLocalChange, onEditingChange, syncVersion 
       ) : (
         <div className="flex-1 overflow-y-auto">
           {entries.map((entry) => (
-            <DiaryItem
+            <SwipeableRow
               key={entry.id}
-              entry={entry}
-              isActive={activeId === entry.id}
-              onSelect={setActiveId}
-            />
+              onPin={() => handlePin(entry.id)}
+              onDelete={() => handleDelete(entry.id)}
+              onFavorite={() => handleFavorite(entry.id)}
+              isPinned={entry.pinned}
+              isFavorited={entry.favorited}
+            >
+              <DiaryItem
+                entry={entry}
+                isActive={activeId === entry.id}
+                onSelect={setActiveId}
+              />
+            </SwipeableRow>
           ))}
         </div>
       )}

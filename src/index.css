@@ -927,6 +927,75 @@ body {
 }
 
 /* ========================================
+   Swipeable Row — Mobile Swipe-to-Actions
+   ======================================== */
+
+.swipeable-row {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Collapse animation (extreme swipe → delete) */
+.swipeable-row.collapsing {
+  transition: max-height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+/* Action button panels — positioned behind the content */
+.swipe-actions-left,
+.swipe-actions-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: stretch;
+  z-index: 0;
+}
+
+.swipe-actions-left {
+  right: 0;
+  flex-direction: row-reverse; /* pin is closer to content, delete is further */
+}
+
+.swipe-actions-right {
+  left: 0;
+  flex-direction: row;
+}
+
+/* Individual action button */
+.swipe-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  color: white;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: opacity 0.15s ease;
+}
+
+.swipe-action-btn:active {
+  opacity: 0.8;
+}
+
+/* Main content layer — slides over the buttons */
+.swipeable-content {
+  position: relative;
+  z-index: 1;
+  background: var(--color-surface);
+  will-change: transform;
+  touch-action: pan-y; /* allow vertical scroll, we handle horizontal */
+}
+
+/* ========================================
    Utilities
    ======================================== */
 

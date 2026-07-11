@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, memo } from 'react';
 import { format } from 'date-fns';
 import { Plus, CheckSquare, Search } from 'lucide-react';
 import InlineChecklist from './InlineChecklist';
+import SwipeableRow from './SwipeableRow';
 import { useEntries } from '../hooks/useEntries';
 import { useReminders } from '../hooks/useReminders';
 
@@ -138,6 +139,28 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
     [remove, activeId, onLocalChange],
   );
 
+  const handlePin = useCallback(
+    (id) => {
+      const entry = entries.find((e) => e.id === id);
+      if (entry) {
+        update(id, { pinned: !entry.pinned });
+        onLocalChange?.();
+      }
+    },
+    [entries, update, onLocalChange],
+  );
+
+  const handleFavorite = useCallback(
+    (id) => {
+      const entry = entries.find((e) => e.id === id);
+      if (entry) {
+        update(id, { favorited: !entry.favorited });
+        onLocalChange?.();
+      }
+    },
+    [entries, update, onLocalChange],
+  );
+
   // If editing, show full-screen checklist editor
   if (activeEntry) {
     const todos = activeEntry.todos || [];
@@ -226,12 +249,20 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
       ) : (
         <div className="flex-1 overflow-y-auto">
           {entries.map((entry) => (
-            <MemoItem
+            <SwipeableRow
               key={entry.id}
-              entry={entry}
-              isActive={activeId === entry.id}
-              onSelect={setActiveId}
-            />
+              onPin={() => handlePin(entry.id)}
+              onDelete={() => handleDelete(entry.id)}
+              onFavorite={() => handleFavorite(entry.id)}
+              isPinned={entry.pinned}
+              isFavorited={entry.favorited}
+            >
+              <MemoItem
+                entry={entry}
+                isActive={activeId === entry.id}
+                onSelect={setActiveId}
+              />
+            </SwipeableRow>
           ))}
         </div>
       )}
