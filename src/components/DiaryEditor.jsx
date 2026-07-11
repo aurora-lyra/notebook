@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
-import { ChevronLeft, Download } from 'lucide-react';
+import { ChevronLeft, Download, CalendarDays } from 'lucide-react';
 import TipTapEditor from './TipTapEditor';
 import { serialize } from '../lib/markdown';
 import { MOODS, MOOD_KEYS, WEATHER, WEATHER_KEYS } from '../lib/moods';
@@ -112,7 +112,9 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
   const [title, setTitle] = useState(entry.title);
   const [mood, setMood] = useState(entry.mood || null);
   const [weather, setWeather] = useState(entry.weather || null);
+  const [createdAt, setCreatedAt] = useState(entry.createdAt);
   const [saveStatus, setSaveStatus] = useState('idle');
+  const dateInputRef = useRef(null);
 
   const titleTimerRef = useRef(null);
   const contentTimerRef = useRef(null);
@@ -121,7 +123,10 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
   const onSaveRef = useRef(onSave);
 
   useEffect(() => { onSaveRef.current = onSave; }, [onSave]);
-  useEffect(() => { setTitle(entry.title); }, [entry.id]);
+  useEffect(() => {
+    setTitle(entry.title);
+    setCreatedAt(entry.createdAt);
+  }, [entry.id]);
   useEffect(() => {
     return () => {
       clearTimeout(titleTimerRef.current);
@@ -152,6 +157,25 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
     onSaveRef.current({ weather: newWeather });
   }, []);
 
+  const handleDateChange = useCallback((e) => {
+    const val = e.target.value; // "2026-07-12T14:30"
+    if (!val) return;
+    const newDate = new Date(val).toISOString();
+    setCreatedAt(newDate);
+    onSaveRef.current({ createdAt: newDate });
+  }, []);
+
+  const handleDateClick = useCallback(() => {
+    // Trigger the hidden native date picker
+    if (dateInputRef.current) {
+      if (dateInputRef.current.showPicker) {
+        dateInputRef.current.showPicker();
+      } else {
+        dateInputRef.current.click();
+      }
+    }
+  }, []);
+
   const handleContentUpdate = useCallback((json) => {
     const jsonStr = JSON.stringify(json);
     if (jsonStr === lastSavedContentRef.current) return;
@@ -174,7 +198,7 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
     statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2500);
   }, []);
 
-  const entryDate = new Date(entry.createdAt);
+  const entryDate = new Date(createdAt);
 
   const handleExport = useCallback(() => {
     const mdContent = serialize(entry.content);
@@ -229,10 +253,26 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
       {/* Editor area — zen glow + generous breathing room */}
       <div className="flex-1 overflow-y-auto zen-glow">
         <div className="diary-editor max-w-[680px] mx-auto px-6 md:px-8 pt-28 md:pt-32 pb-40 relative z-10">
-          {/* Date — whisper quiet */}
-          <p className="text-[11px] text-zinc-600 mb-8 tracking-[0.15em] uppercase select-none">
-            {format(entryDate, 'yyyy · M月d日 · EEEE')}
-          </p>
+          {/* Date — editable on hover */}
+          <div className="mb-8">
+            <button
+              onClick={handleDateClick}
+              className="text-[11px] text-zinc-600 hover:text-zinc-300 tracking-[0.15em] uppercase select-none
+                transition-all duration-200 cursor-pointer
+                hover:border-b hover:border-dashed hover:border-zinc-500 pb-0.5"
+            >
+              {format(entryDate, 'yyyy · M月d日 · EEEE')}
+            </button>
+            {/* Hidden native datetime picker */}
+            <input
+              ref={dateInputRef}
+              type="datetime-local"
+              value={format(entryDate, "yyyy-MM-dd'T'HH:mm")}
+              onChange={handleDateChange}
+              className="absolute opacity-0 w-0 h-0 pointer-events-none"
+              tabIndex={-1}
+            />
+          </div>
 
           {/* Title — literary serif with wide tracking */}
           <input
