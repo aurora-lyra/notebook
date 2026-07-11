@@ -91,13 +91,13 @@ export default function Sidebar({
           <button
             key={id}
             onClick={() => onViewChange(id)}
-            className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition-colors
+            className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] tracking-wide transition-all duration-200
               ${activeView === id
-                ? 'bg-surface-active text-ink font-medium'
-                : 'text-ink-secondary hover:bg-surface-hover hover:text-ink'
+                ? 'bg-white/[0.06] text-ink font-normal'
+                : 'text-ink-secondary hover:bg-white/[0.03] hover:text-ink font-light'
               }`}
           >
-            <Icon size={15} className="shrink-0" />
+            <Icon size={15} className="shrink-0 opacity-70" />
             <span>{label}</span>
           </button>
         ))}
@@ -105,20 +105,20 @@ export default function Sidebar({
         {/* Folders */}
         {folders.length > 0 && (
           <>
-            <div className="pt-3 pb-1 px-2.5 text-xs font-medium text-ink-tertiary uppercase tracking-wider">
+            <div className="pt-3 pb-1 px-2.5 text-[10px] font-normal text-ink-faint uppercase tracking-[0.08em]">
               文件夹
             </div>
             {folders.map((f) => (
               <button
                 key={f}
                 onClick={() => onViewChange(`folder:${f}`)}
-                className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition-colors
+                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] tracking-wide transition-all duration-200
                   ${activeView === `folder:${f}`
-                    ? 'bg-surface-active text-ink font-medium'
-                    : 'text-ink-secondary hover:bg-surface-hover hover:text-ink'
+                    ? 'bg-white/[0.06] text-ink font-normal'
+                    : 'text-ink-secondary hover:bg-white/[0.03] hover:text-ink font-light'
                   }`}
               >
-                <FolderOpen size={15} className="shrink-0" />
+                <FolderOpen size={15} className="shrink-0 opacity-70" />
                 <span>{f}</span>
               </button>
             ))}
@@ -128,20 +128,20 @@ export default function Sidebar({
         {/* Tags */}
         {tags.length > 0 && (
           <>
-            <div className="pt-3 pb-1 px-2.5 text-xs font-medium text-ink-tertiary uppercase tracking-wider">
+            <div className="pt-3 pb-1 px-2.5 text-[10px] font-normal text-ink-faint uppercase tracking-[0.08em]">
               标签
             </div>
             {tags.map((t) => (
               <button
                 key={t}
                 onClick={() => onViewChange(`tag:${t}`)}
-                className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition-colors
+                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] tracking-wide transition-all duration-200
                   ${activeView === `tag:${t}`
-                    ? 'bg-surface-active text-ink font-medium'
-                    : 'text-ink-secondary hover:bg-surface-hover hover:text-ink'
+                    ? 'bg-white/[0.06] text-ink font-normal'
+                    : 'text-ink-secondary hover:bg-white/[0.03] hover:text-ink font-light'
                   }`}
               >
-                <Tag size={15} className="shrink-0" />
+                <Tag size={15} className="shrink-0 opacity-70" />
                 <span>{t}</span>
               </button>
             ))}

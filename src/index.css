@@ -1,47 +1,48 @@
 @import "tailwindcss";
 
 /* ========================================
-   Moonlight Zen Design System
-   Digital Wabi-Sabi × Apple Minimalism
+   Moonlight Zen Design System v2
+   Pixel-Perfect UI Polish
    ======================================== */
 
 @theme {
   /* --- Color Palette (Light) --- */
-  --color-ink: #191919;
+  --color-ink: #1a1a1a;
   --color-ink-secondary: #6b6b6b;
-  --color-ink-tertiary: #9b9b9b;
-  --color-ink-faint: #c4c4c4;
+  --color-ink-tertiary: #9a9a9a;
+  --color-ink-faint: #c0c0c0;
 
   --color-surface: #ffffff;
-  --color-surface-hover: #f7f7f5;
-  --color-surface-active: #efefed;
+  --color-surface-hover: #f8f8f6;
+  --color-surface-active: #f0f0ee;
   --color-surface-raised: #ffffff;
 
-  --color-border: #e8e8e5;
-  --color-border-strong: #d3d3d0;
+  /* Semi-transparent borders — blend into surface */
+  --color-border: rgba(0, 0, 0, 0.06);
+  --color-border-strong: rgba(0, 0, 0, 0.1);
 
   --color-accent: #2383e2;
   --color-accent-hover: #1b6ec2;
-  --color-accent-surface: rgba(35, 131, 226, 0.08);
+  --color-accent-surface: rgba(35, 131, 226, 0.06);
 
   --color-danger: #e03e3e;
-  --color-danger-surface: rgba(224, 62, 62, 0.08);
+  --color-danger-surface: rgba(224, 62, 62, 0.06);
 
   --color-warning: #d9730d;
-  --color-warning-surface: rgba(217, 115, 13, 0.08);
+  --color-warning-surface: rgba(217, 115, 13, 0.06);
 
   --color-success: #0f7b6c;
-  --color-success-surface: rgba(15, 123, 108, 0.08);
+  --color-success-surface: rgba(15, 123, 108, 0.06);
 
   /* --- Typography --- */
-  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    "Noto Sans SC", sans-serif;
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", "Noto Sans SC", sans-serif;
   --font-serif: ui-serif, Georgia, "Noto Serif SC", "STSong", serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
 
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.8125rem;
-  --font-size-base: 0.9375rem;
+  --font-size-xs: 0.6875rem;   /* 11px */
+  --font-size-sm: 0.8125rem;   /* 13px */
+  --font-size-base: 0.9375rem; /* 15px */
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.3125rem;
   --font-size-2xl: 1.625rem;
@@ -59,16 +60,18 @@
   --spacing-12: 3rem;
   --spacing-16: 4rem;
 
-  /* --- Border Radius --- */
+  /* --- Border Radius (nesting ratio: outer > inner) --- */
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 12px;
+  --radius-2xl: 16px;
 
-  /* --- Shadows --- */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 1px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.06);
+  /* --- Shadows — soft, layered --- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.04), 0 0 1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.06), 0 0 1px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 0 1px rgba(35, 131, 226, 0.15), 0 0 12px rgba(35, 131, 226, 0.08);
 
   /* --- Transitions --- */
   --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -96,32 +99,33 @@
 
   /* Surfaces — warm charcoal with depth */
   --color-surface: #09090b;
-  --color-surface-hover: #18181b;
-  --color-surface-active: #27272a;
-  --color-surface-raised: #18181b;
+  --color-surface-hover: #141416;
+  --color-surface-active: #1e1e21;
+  --color-surface-raised: #141416;
 
-  /* Borders — whisper thin */
-  --color-border: #27272a;
-  --color-border-strong: #3f3f46;
+  /* Borders — whisper thin, semi-transparent */
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-strong: rgba(255, 255, 255, 0.1);
 
   /* Accent — moon blue */
   --color-accent: #60a5fa;
   --color-accent-hover: #93bbfd;
-  --color-accent-surface: rgba(96, 165, 250, 0.1);
+  --color-accent-surface: rgba(96, 165, 250, 0.08);
 
   --color-danger: #f87171;
-  --color-danger-surface: rgba(248, 113, 113, 0.1);
+  --color-danger-surface: rgba(248, 113, 113, 0.08);
 
   --color-warning: #fb923c;
-  --color-warning-surface: rgba(251, 146, 60, 0.1);
+  --color-warning-surface: rgba(251, 146, 60, 0.08);
 
   --color-success: #34d399;
-  --color-success-surface: rgba(52, 211, 153, 0.1);
+  --color-success-surface: rgba(52, 211, 153, 0.08);
 
   /* Shadows — deep, soft */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 0 1px rgba(96, 165, 250, 0.2), 0 0 16px rgba(96, 165, 250, 0.1);
 
   /* Priority — slightly brighter */
   --color-priority-high: #d4897a;
@@ -146,6 +150,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.3s ease, color 0.3s ease;
+  letter-spacing: 0.005em;
 }
 
 body {
@@ -163,6 +168,80 @@ body {
 }
 
 /* ========================================
+   Global Focus — Kill Default Blue, Use Soft Glow
+   ======================================== */
+
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-glow);
+  transition: box-shadow var(--duration-normal) var(--ease-out);
+}
+
+/* Buttons and interactive elements — softer focus ring */
+button:focus-visible,
+a:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-glow);
+  border-radius: var(--radius-md);
+}
+
+/* Input fields — border glow on focus */
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: rgba(35, 131, 226, 0.3) !important;
+  box-shadow: var(--shadow-glow);
+}
+
+[data-theme="dark"] input:focus-visible,
+[data-theme="dark"] textarea:focus-visible {
+  border-color: rgba(96, 165, 250, 0.25) !important;
+}
+
+/* ========================================
+   Input Fields — Borderless Default, Glow on Focus
+   ======================================== */
+
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+input[type="url"],
+input[type="number"],
+textarea {
+  border: 1px solid transparent;
+  transition: border-color var(--duration-normal) var(--ease-out),
+              box-shadow var(--duration-normal) var(--ease-out);
+}
+
+input[type="text"]:hover,
+input[type="search"]:hover,
+textarea:hover {
+  border-color: var(--color-border);
+}
+
+/* ========================================
+   Touch Targets — Minimum 44x44px (WCAG 2.5.5)
+   ======================================== */
+
+button,
+[role="button"],
+a {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Exception: small icon buttons get padding instead */
+button svg,
+button img {
+  flex-shrink: 0;
+}
+
+/* ========================================
    TipTap Editor — Zen Typography
    ======================================== */
 
@@ -170,7 +249,7 @@ body {
   outline: none;
   font-size: 17px;
   line-height: 1.85;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.008em;
 }
 
 .tiptap p {
@@ -183,21 +262,21 @@ body {
 
 .tiptap h1 {
   font-size: var(--font-size-2xl);
-  font-weight: 600;
+  font-weight: 500;
   margin: 1.2em 0 0.4em;
   letter-spacing: -0.02em;
 }
 
 .tiptap h2 {
   font-size: var(--font-size-xl);
-  font-weight: 600;
+  font-weight: 500;
   margin: 1em 0 0.3em;
   letter-spacing: -0.015em;
 }
 
 .tiptap h3 {
   font-size: var(--font-size-lg);
-  font-weight: 600;
+  font-weight: 500;
   margin: 0.8em 0 0.2em;
   letter-spacing: -0.01em;
 }
@@ -213,15 +292,16 @@ body {
 }
 
 .tiptap blockquote {
-  border-left: 3px solid var(--color-border-strong);
+  border-left: 2px solid var(--color-border-strong);
   padding-left: 1em;
   margin: 0.8em 0;
   color: var(--color-ink-secondary);
+  font-style: italic;
 }
 
 .tiptap code {
   font-family: var(--font-mono);
-  font-size: 0.875em;
+  font-size: 0.85em;
   background: var(--color-surface-active);
   padding: 0.15em 0.4em;
   border-radius: var(--radius-sm);
@@ -231,7 +311,7 @@ body {
   background: var(--color-ink);
   color: var(--color-surface);
   padding: 0.875em 1em;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   overflow-x: auto;
   margin: 0.8em 0;
 }
@@ -243,7 +323,7 @@ body {
 
 .tiptap img {
   max-width: 100%;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   margin: 0.8em 0;
 }
 
@@ -276,7 +356,7 @@ body {
   font-family: var(--font-serif);
   font-size: 17px;
   line-height: 1.85;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.008em;
   color: var(--color-ink);
   font-weight: 300;
 }
@@ -293,7 +373,7 @@ body {
 .diary-editor .tiptap h2 {
   font-family: var(--font-sans);
   font-size: 1.375rem;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: -0.01em;
   margin: 1.3em 0 0.4em;
   color: var(--color-ink);
@@ -302,7 +382,7 @@ body {
 .diary-editor .tiptap h3 {
   font-family: var(--font-sans);
   font-size: 1.125rem;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: -0.005em;
   margin: 1em 0 0.3em;
   color: var(--color-ink);
@@ -324,14 +404,14 @@ body {
 .diary-editor .tiptap img {
   display: block;
   max-width: 100%;
-  border-radius: var(--radius-lg);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.03);
   margin: 1.5em auto;
   transition: box-shadow var(--duration-normal) var(--ease-out);
 }
 
 .diary-editor .tiptap img:hover {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .diary-editor .tiptap ul,
@@ -512,71 +592,6 @@ body {
 }
 
 /* ========================================
-   Mood Pill
-   ======================================== */
-
-.mood-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 16px;
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  background: rgba(24, 24, 27, 0.3);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.mood-pill .mood-item {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease-out;
-  filter: grayscale(1);
-  opacity: 0.3;
-}
-
-.mood-pill .mood-item:hover {
-  filter: none;
-  opacity: 1;
-  transform: scale(1.15);
-}
-
-.mood-pill .mood-item.selected {
-  filter: none;
-  opacity: 1;
-  transform: scale(1.1);
-}
-
-.mood-pill .mood-item .mood-glow {
-  position: absolute;
-  bottom: -4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 20px;
-  height: 6px;
-  border-radius: 50%;
-  filter: blur(4px);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.mood-pill .mood-item.selected .mood-glow {
-  opacity: 0.6;
-  animation: mood-breathe 3s ease-in-out infinite;
-}
-
-@keyframes mood-breathe {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 0.3; }
-}
-
-/* ========================================
    Immersive Sidebar Transition
    ======================================== */
 
@@ -599,11 +614,13 @@ body {
 
 .settings-tab {
   padding: 6px 14px;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   font-size: 13px;
   color: var(--color-ink-tertiary);
   transition: all 0.2s ease-out;
   cursor: pointer;
+  font-weight: 400;
+  letter-spacing: 0.01em;
 }
 
 .settings-tab:hover {
@@ -614,7 +631,7 @@ body {
 .settings-tab.active {
   color: var(--color-ink);
   background: var(--color-surface-active);
-  font-weight: 500;
+  font-weight: 450;
 }
 
 /* ========================================
@@ -623,9 +640,14 @@ body {
 
 .stat-card {
   padding: 16px;
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
+  transition: border-color var(--duration-normal) var(--ease-out);
+}
+
+.stat-card:hover {
+  border-color: var(--color-border-strong);
 }
 
 .stat-card .stat-value {
@@ -637,9 +659,10 @@ body {
 }
 
 .stat-card .stat-label {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--color-ink-tertiary);
   margin-top: 2px;
+  letter-spacing: 0.02em;
 }
 
 /* Progress bar for mood distribution */
@@ -660,7 +683,7 @@ body {
    ======================================== */
 
 .drag-overlay {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06);
   border-radius: var(--radius-lg);
   background: var(--color-surface-raised);
   transform: scale(1.02);
@@ -762,7 +785,7 @@ body {
   align-items: flex-start;
   gap: 10px;
   padding: 6px 4px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   transition: background var(--duration-fast) var(--ease-out);
   position: relative;
 }
@@ -789,20 +812,12 @@ body {
 
 .checklist-checkbox:hover {
   border-color: var(--color-ink-tertiary);
-  transform: scale(1.1);
 }
 
 .checklist-checkbox.checked {
   background: var(--color-accent);
   border-color: var(--color-accent);
   color: var(--color-surface);
-  animation: check-pop 0.3s var(--ease-zen);
-}
-
-@keyframes check-pop {
-  0% { transform: scale(0.8); }
-  50% { transform: scale(1.15); }
-  100% { transform: scale(1); }
 }
 
 /* Text — inline */
@@ -884,9 +899,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
   color: var(--color-ink-faint);
   transition: all 0.15s var(--ease-out);
   cursor: pointer;
@@ -936,15 +951,6 @@ body {
   isolation: isolate;
 }
 
-/* Collapse animation (extreme swipe → delete) */
-.swipeable-row.collapsing {
-  transition: max-height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              opacity 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-}
-
 /* Action button panels — positioned behind the content */
 .swipe-actions-left,
 .swipe-actions-right {
@@ -958,7 +964,7 @@ body {
 
 .swipe-actions-left {
   right: 0;
-  flex-direction: row-reverse; /* pin is closer to content, delete is further */
+  flex-direction: row-reverse;
 }
 
 .swipe-actions-right {
@@ -980,6 +986,7 @@ body {
   border: none;
   outline: none;
   transition: opacity 0.15s ease;
+  letter-spacing: 0.02em;
 }
 
 .swipe-action-btn:active {
@@ -992,7 +999,7 @@ body {
   z-index: 1;
   background: var(--color-surface);
   will-change: transform;
-  touch-action: pan-y; /* allow vertical scroll, we handle horizontal */
+  touch-action: pan-y;
 }
 
 /* ========================================
@@ -1052,38 +1059,4 @@ body {
 
 [data-theme="light"] * {
   scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
-}
-
-/* ========================================
-   Popover Animation
-   ======================================== */
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slide-in-from-top-1 {
-  from { transform: translateY(-4px); }
-  to { transform: translateY(0); }
-}
-
-.animate-in {
-  animation-fill-mode: both;
-}
-
-.fade-in {
-  animation-name: fade-in;
-}
-
-.slide-in-from-top-1 {
-  animation-name: slide-in-from-top-1;
-}
-
-.duration-200 {
-  animation-duration: 200ms;
-}
-
-.duration-150 {
-  animation-duration: 150ms;
 }
