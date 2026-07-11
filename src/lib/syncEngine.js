@@ -13,8 +13,10 @@ import { supabase, isConfigured } from './supabase';
 import { invalidateCache } from './db';
 
 const PUSH_DEBOUNCE = 800; // ms before pushing changes
+const PUSH_ECHO_GRACE = 2500; // ms to suppress Realtime echo after push
 let pushTimer = null;
 let currentUserId = null;
+let lastPushTime = 0; // timestamp of last completed push
 
 /* ============================================================
    Naming convention helpers
@@ -324,6 +326,7 @@ export function schedulePush() {
     try {
       await pushEntries(currentUserId);
       await pushTodos(currentUserId);
+      lastPushTime = Date.now();
     } catch (err) {
       console.error('[Sync] Push failed:', err);
     }
@@ -346,6 +349,7 @@ export async function fullSync() {
   try {
     await pushEntries(currentUserId);
     await pushTodos(currentUserId);
+    lastPushTime = Date.now();
     await pullEntries(currentUserId);
     await pullTodos(currentUserId);
   } catch (err) {
@@ -382,6 +386,8 @@ export function subscribeRealtime(userId, onChange) {
         filter: `user_id=eq.${userId}`,
       },
       async (payload) => {
+        // Skip echo: if we just pushed, this is likely our own change bouncing back
+        if (Date.now() - lastPushTime < PUSH_ECHO_GRACE) return;
         console.log('[Realtime] entries change:', payload.eventType);
         await pullEntries(userId);
         onChangeCallback?.('entries');
@@ -401,6 +407,8 @@ export function subscribeRealtime(userId, onChange) {
         filter: `user_id=eq.${userId}`,
       },
       async (payload) => {
+        // Skip echo: if we just pushed, this is likely our own change bouncing back
+        if (Date.now() - lastPushTime < PUSH_ECHO_GRACE) return;
         console.log('[Realtime] todos change:', payload.eventType);
         await pullTodos(userId);
         onChangeCallback?.('todos');

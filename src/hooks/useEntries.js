@@ -70,10 +70,10 @@ export function useEntries(filter = {}, syncVersion = 0) {
 
   const remove = useCallback(
     (id) => {
-      // deleteEntry mutates cache and returns the raw array (no re-parse)
-      const raw = db.deleteEntry(id);
-      // Apply filter to the already-parsed array
-      setEntries(applyFilter(raw, filterRef.current));
+      // Optimistic: remove from UI immediately via prev.filter
+      // db.deleteEntry mutates the cache + flushes to localStorage (side effect)
+      db.deleteEntry(id);
+      setEntries((prev) => prev.filter((e) => e.id !== id));
     },
     [],
   );
