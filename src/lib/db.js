@@ -29,14 +29,13 @@ function loadCache() {
 }
 
 function flushCache() {
-  // Async-friendly: schedule write to avoid blocking
-  const data = JSON.stringify(_cache);
-  // Use requestIdleCallback if available, otherwise setTimeout
-  if (typeof requestIdleCallback !== 'undefined') {
-    requestIdleCallback(() => localStorage.setItem(STORAGE_KEY, data));
-  } else {
-    setTimeout(() => localStorage.setItem(STORAGE_KEY, data), 0);
-  }
+  // MUST be synchronous — async writes (requestIdleCallback) cause a race:
+  //   1. deleteEntry() removes from in-memory cache
+  //   2. flushCache() SCHEDULES a write (but hasn't written yet!)
+  //   3. queueDeletion() writes pending ID
+  //   4. pushEntries() reads localStorage → sees OLD data → re-upserts deleted entry
+  // Synchronous write eliminates this race entirely.
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(_cache));
 }
 
 function uid() {

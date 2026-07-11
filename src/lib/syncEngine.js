@@ -181,28 +181,52 @@ async function pushEntries(userId) {
   const pending = readPendingDeletions();
   if (pending.size > 0) {
     const idsToDelete = [...pending];
-    console.log('[Sync] Deleting entries from cloud:', idsToDelete);
+    console.log('[Sync] Attempting cloud delete:', {
+      userId,
+      idsToDelete,
+      pendingCount: idsToDelete.length,
+    });
 
-    const { data: deletedRows, error: deleteError } = await supabase
+    const { data: deletedRows, error: deleteError, status, statusText } = await supabase
       .from('entries')
       .delete()
       .eq('user_id', userId)
       .in('id', idsToDelete)
       .select('id');
 
+    // Detailed error logging
     if (deleteError) {
-      console.error('[Sync] Cloud delete failed:', deleteError);
+      console.error('[Sync] ❌ Cloud delete FAILED:', {
+        code: deleteError.code,
+        message: deleteError.message,
+        details: deleteError.details,
+        hint: deleteError.hint,
+        httpStatus: status,
+        httpStatusText: statusText,
+      });
       // Keep in pending — will retry on next sync
     } else {
       const deletedIds = new Set((deletedRows || []).map((r) => r.id));
+      const notDeleted = idsToDelete.filter((id) => !deletedIds.has(id));
+
+      if (notDeleted.length > 0) {
+        console.warn('[Sync] ⚠️ Some IDs were NOT found on server (0 rows affected):', {
+          notDeleted,
+          possibleCauses: [
+            'RLS DELETE policy missing or incorrect',
+            'Entry was never synced to cloud',
+            'Entry already deleted by another device',
+          ],
+        });
+      }
+
       for (const id of idsToDelete) {
         if (deletedIds.has(id)) {
-          clearPendingDeletion(id);
-          console.log('[Sync] Deleted entry from cloud:', id);
+          console.log('[Sync] ✅ Deleted from cloud:', id);
         } else {
-          // ID not found on server (already deleted or never synced) — clear anyway
-          clearPendingDeletion(id);
+          console.log('[Sync] ⏭️ ID not on server, clearing from pending:', id);
         }
+        clearPendingDeletion(id);
       }
     }
   }
