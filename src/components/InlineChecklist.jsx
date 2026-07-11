@@ -15,9 +15,6 @@ function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
-/**
- * Format a due date into a human-readable relative label.
- */
 function formatDueLabel(dueAt) {
   if (!dueAt) return '';
   const d = new Date(dueAt);
@@ -34,6 +31,9 @@ function formatDueLabel(dueAt) {
 
 /**
  * Single checklist row — inline editing with ghost controls on hover.
+ *
+ * KEY FIX: Uses a ref (textRef) to always have the latest text value,
+ * avoiding stale closure bugs in useCallback + memo combinations.
  */
 const ChecklistRow = memo(function ChecklistRow({
   todo,
@@ -46,11 +46,28 @@ const ChecklistRow = memo(function ChecklistRow({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const inputRef = useRef(null);
   const dateRef = useRef(null);
+  const textRef = useRef(todo.text);
 
-  // Sync text when todo.text changes externally
+  // Keep textRef in sync with local text
+  textRef.current = text;
+
+  // Sync text when todo.text changes externally (and not editing)
   useEffect(() => {
-    if (!editing) setText(todo.text);
+    if (!editing) {
+      setText(todo.text);
+      textRef.current = todo.text;
+    }
   }, [todo.text, editing]);
+
+  // CRITICAL: Flush unsaved text on unmount
+  useEffect(() => {
+    return () => {
+      const current = textRef.current.trim();
+      if (current && current !== todo.text) {
+        onUpdate(todo.id, { text: current });
+      }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleToggle = useCallback(() => {
     onUpdate(todo.id, { done: !todo.done });
@@ -58,42 +75,43 @@ const ChecklistRow = memo(function ChecklistRow({
 
   const handleTextChange = useCallback((e) => {
     setText(e.target.value);
+    textRef.current = e.target.value;
   }, []);
 
+  // Save using ref — always has latest value, no stale closure
   const handleTextSave = useCallback(() => {
-    const trimmed = text.trim();
-    if (trimmed && trimmed !== todo.text) {
-      onUpdate(todo.id, { text: trimmed });
-    } else if (!trimmed) {
-      // Empty text → delete the row (unless it's the only one)
+    const current = textRef.current.trim();
+    if (current && current !== todo.text) {
+      onUpdate(todo.id, { text: current });
+    } else if (!current && todo.text) {
       onDelete(todo.id);
       return;
     }
     setEditing(false);
-  }, [text, todo.id, todo.text, onUpdate, onDelete]);
+  }, [todo.id, todo.text, onUpdate, onDelete]);
 
   const handleKeyDown = useCallback(
     (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        const trimmed = text.trim();
-        if (trimmed && trimmed !== todo.text) {
-          onUpdate(todo.id, { text: trimmed });
+        const current = textRef.current.trim();
+        if (current && current !== todo.text) {
+          onUpdate(todo.id, { text: current });
         }
         setEditing(false);
-        // Create new row after this one
         onAddAfter(todo.id);
       }
-      if (e.key === 'Backspace' && text === '') {
+      if (e.key === 'Backspace' && textRef.current === '') {
         e.preventDefault();
         onDelete(todo.id);
       }
       if (e.key === 'Escape') {
         setText(todo.text);
+        textRef.current = todo.text;
         setEditing(false);
       }
     },
-    [text, todo.id, todo.text, onUpdate, onDelete, onAddAfter],
+    [todo.id, todo.text, onUpdate, onDelete, onAddAfter],
   );
 
   const handlePriorityCycle = useCallback(() => {
@@ -141,7 +159,7 @@ const ChecklistRow = memo(function ChecklistRow({
       exit={{ opacity: 0, height: 0 }}
       transition={{ type: 'spring', stiffness: 400, damping: 28 }}
     >
-      {/* Checkbox — spring tap + check animation */}
+      {/* Checkbox */}
       <motion.button
         onClick={handleToggle}
         whileTap={{ scale: 0.8 }}
@@ -192,7 +210,6 @@ const ChecklistRow = memo(function ChecklistRow({
           </span>
         )}
 
-        {/* Due time badge — below the text */}
         {dueLabel && !todo.done && (
           <span
             className={`checklist-time-badge ${isOverdue ? 'overdue' : ''}`}
@@ -202,9 +219,8 @@ const ChecklistRow = memo(function ChecklistRow({
         )}
       </div>
 
-      {/* Ghost controls — appear on hover */}
+      {/* Ghost controls */}
       <div className="checklist-controls">
-        {/* Reminder button */}
         <div className="relative">
           <button
             onClick={() => {
@@ -218,7 +234,6 @@ const ChecklistRow = memo(function ChecklistRow({
           >
             <Bell size={12} />
           </button>
-          {/* Hidden datetime picker */}
           <input
             ref={dateRef}
             type="datetime-local"
@@ -233,7 +248,6 @@ const ChecklistRow = memo(function ChecklistRow({
           />
         </div>
 
-        {/* Priority button */}
         <button
           onClick={handlePriorityCycle}
           title={`优先级: ${todo.priority === 'high' ? '高' : todo.priority === 'medium' ? '中' : '低'}`}
@@ -245,7 +259,6 @@ const ChecklistRow = memo(function ChecklistRow({
           />
         </button>
 
-        {/* Delete button */}
         <button
           onClick={() => onDelete(todo.id)}
           title="删除"
@@ -260,26 +273,29 @@ const ChecklistRow = memo(function ChecklistRow({
 
 /**
  * InlineChecklist — zen inline editing experience for checklist mode.
- *
- * Each row is a standalone inline element. Enter creates a new row below.
- * Hover reveals ghost control buttons (reminder, priority, delete).
  */
 export default function InlineChecklist({ todos = [], onChange }) {
   const [localTodos, setLocalTodos] = useState(todos);
   const endRef = useRef(null);
+  const onChangeRef = useRef(onChange);
 
-  // Sync from parent when todos prop changes (e.g., on entry switch)
+  // Keep onChange ref fresh
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  // Sync from parent when todos prop changes
   useEffect(() => {
     setLocalTodos(todos);
   }, [todos]);
 
-  // Notify parent of changes
+  // Notify parent of changes — use ref to avoid stale closure
   const emit = useCallback(
     (updated) => {
       setLocalTodos(updated);
-      onChange?.(updated);
+      onChangeRef.current?.(updated);
     },
-    [onChange],
+    [], // stable — uses ref for onChange
   );
 
   const handleUpdate = useCallback(
@@ -292,7 +308,6 @@ export default function InlineChecklist({ todos = [], onChange }) {
   const handleDelete = useCallback(
     (id) => {
       const filtered = localTodos.filter((t) => t.id !== id);
-      // Always keep at least one empty row
       if (filtered.length === 0) {
         emit([
           {
@@ -325,12 +340,10 @@ export default function InlineChecklist({ todos = [], onChange }) {
       const updated = [...localTodos];
       updated.splice(idx + 1, 0, newTodo);
       emit(updated);
-      // Focus the new row will happen via autoFocus on the new input
     },
     [localTodos, emit],
   );
 
-  // If empty, start with one blank row
   const displayTodos =
     localTodos.length > 0
       ? localTodos
@@ -350,7 +363,6 @@ export default function InlineChecklist({ todos = [], onChange }) {
 
   return (
     <div className="checklist-container">
-      {/* Progress indicator */}
       {totalCount > 0 && (
         <div className="checklist-progress">
           <div className="checklist-progress-bar">
@@ -367,7 +379,6 @@ export default function InlineChecklist({ todos = [], onChange }) {
         </div>
       )}
 
-      {/* Rows */}
       <div className="checklist-rows">
         {displayTodos.map((todo) => (
           <ChecklistRow

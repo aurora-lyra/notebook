@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, memo } from 'react';
+import { useState, useCallback, useMemo, useRef, memo } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { Plus, CheckSquare, Search } from 'lucide-react';
@@ -117,8 +117,11 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
     [activeId, update, onLocalChange],
   );
 
+  const titleRef = useRef('');
+
   const handleTitleChange = useCallback(
     (e) => {
+      titleRef.current = e.target.value;
       if (activeId) {
         update(activeId, { title: e.target.value });
         onLocalChange?.();
@@ -126,6 +129,14 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
     },
     [activeId, update, onLocalChange],
   );
+
+  const handleTitleBlur = useCallback(() => {
+    // Flush title on blur — ensures save even if onChange was missed
+    if (activeId && titleRef.current) {
+      update(activeId, { title: titleRef.current });
+      onLocalChange?.();
+    }
+  }, [activeId, update, onLocalChange]);
 
   const handleBack = useCallback(() => {
     setActiveId(null);
@@ -193,6 +204,7 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
             <input
               value={activeEntry.title}
               onChange={handleTitleChange}
+              onBlur={handleTitleBlur}
               placeholder="备忘录标题…"
               className="w-full text-3xl font-light text-zinc-200 placeholder:text-zinc-700
                 outline-none bg-transparent leading-tight tracking-wide"
