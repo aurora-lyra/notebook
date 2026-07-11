@@ -250,6 +250,20 @@ button img {
   font-size: 17px;
   line-height: 1.85;
   letter-spacing: 0.008em;
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  transition: box-shadow var(--duration-normal) var(--ease-out);
+}
+
+@media (min-width: 768px) {
+  .tiptap {
+    padding: 2rem;
+  }
+}
+
+/* Soft glow on focus — breathing room from border */
+.tiptap:focus-within {
+  box-shadow: var(--shadow-glow);
 }
 
 .tiptap p {
