@@ -191,7 +191,14 @@ VITE_SUPABASE_ANON_KEY=eyJxxx...
 - [x] 接入 Supabase Auth 认证
 - [x] Supabase 数据库同步
 - [x] 性能优化（缓存 + 乐观更新 + memo）
-- [ ] 暗色模式
-- [ ] 拖拽排序
-- [ ] Markdown 导入/导出
-- [ ] 移动端响应式
+- [x] 暗色模式（月之静谧 Moonlight Zen 主题）
+- [x] 拖拽排序（@dnd-kit，跨分类拖拽）
+- [x] Markdown 导入/导出（自定义零依赖转换器）
+- [x] 移动端响应式（抽屉导航 + FAB + 自适应布局）
+- [x] PWA 支持（vite-plugin-pwa，离线缓存）
+- [x] 图片上传（Supabase Storage + 本地压缩 + WebP）
+- [x] 情绪像素马赛克（Year in Pixels 心情网格）
+- [x] 设置与统计中心（个人设置 + 时光复盘）
+- [x] 沉浸式写作模式（编辑时侧边栏自动淡出）
+- [x] 心情+天气胶囊选择器
+- [x] 修改密码功能
