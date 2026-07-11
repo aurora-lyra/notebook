@@ -11,6 +11,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- 迁移：如已有表，执行以下 ALTER 添加新列：
 --   ALTER TABLE entries ADD COLUMN IF NOT EXISTS mode TEXT DEFAULT 'text';
 --   ALTER TABLE entries ADD COLUMN IF NOT EXISTS todos JSONB DEFAULT '[]';
+--   ALTER TABLE entries ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'draft';
 -- ============================================
 CREATE TABLE IF NOT EXISTS entries (
   id          TEXT PRIMARY KEY,              -- 客户端生成的 ID (Date.now base36 + random)
@@ -20,6 +21,7 @@ CREATE TABLE IF NOT EXISTS entries (
   type        TEXT NOT NULL DEFAULT 'diary' CHECK (type IN ('diary', 'memo')),
   mode        TEXT NOT NULL DEFAULT 'text' CHECK (mode IN ('text', 'checklist')),
   todos       JSONB DEFAULT '[]',            -- 清单模式待办数据（嵌入式）
+  status      TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
   tags        TEXT[] DEFAULT '{}',
   folder      TEXT DEFAULT '',
   pinned      BOOLEAN DEFAULT false,

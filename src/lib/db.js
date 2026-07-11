@@ -57,6 +57,7 @@ export function listEntries(filter = {}) {
   let entries = loadCache();
 
   if (filter.type) entries = entries.filter((e) => e.type === filter.type);
+  if (filter.status) entries = entries.filter((e) => (e.status || 'draft') === filter.status);
   if (filter.tag) entries = entries.filter((e) => e.tags.includes(filter.tag));
   if (filter.folder) entries = entries.filter((e) => e.folder === filter.folder);
   if (filter.search) {
@@ -96,6 +97,7 @@ export function createEntry(overrides = {}) {
     coverUrl: '',
     mode: 'text',
     todos: [],
+    status: 'draft',
     mood: null,
     weather: null,
     reminderAt: null,
@@ -147,6 +149,35 @@ export function restoreEntry(entry) {
   if (!entry) return;
   loadCache().push(entry);
   flushCache();
+}
+
+/* ---- Draft localStorage (instant local save) ---- */
+
+function draftKey(entryId) {
+  return `draft_entry_${entryId}`;
+}
+
+/** Save a draft field to localStorage (instant, 0ms). */
+export function saveDraftLocal(entryId, patch) {
+  try {
+    const existing = JSON.parse(localStorage.getItem(draftKey(entryId))) || {};
+    const merged = { ...existing, ...patch, _updatedAt: Date.now() };
+    localStorage.setItem(draftKey(entryId), JSON.stringify(merged));
+  } catch { /* ignore quota errors */ }
+}
+
+/** Read a draft from localStorage. */
+export function readDraftLocal(entryId) {
+  try {
+    return JSON.parse(localStorage.getItem(draftKey(entryId))) || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Clear a draft from localStorage after publishing. */
+export function clearDraftLocal(entryId) {
+  localStorage.removeItem(draftKey(entryId));
 }
 
 /* ---- Tags & Folders (derived from cache) ---- */

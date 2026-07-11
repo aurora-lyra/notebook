@@ -9,6 +9,7 @@ import { queueDeletion } from '../lib/syncEngine';
 function applyFilter(entries, filter) {
   let result = entries;
   if (filter.type) result = result.filter((e) => e.type === filter.type);
+  if (filter.status) result = result.filter((e) => (e.status || 'draft') === filter.status);
   if (filter.tag) result = result.filter((e) => e.tags.includes(filter.tag));
   if (filter.folder) result = result.filter((e) => e.folder === filter.folder);
   if (filter.search) {

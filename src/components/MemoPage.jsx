@@ -89,6 +89,7 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
 
   const { entries, create, update, remove, refresh } = useEntries({
     type: 'memo',
+    status: 'published',
     search,
   }, syncVersion);
 

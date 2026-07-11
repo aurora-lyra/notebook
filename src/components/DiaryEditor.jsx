@@ -1,22 +1,31 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
-import { ChevronLeft, Download } from 'lucide-react';
+import { ChevronLeft, Download, Send } from 'lucide-react';
 import TipTapEditor from './TipTapEditor';
 import TypeToggle from './TypeToggle';
 import InlineChecklist from './InlineChecklist';
 import { serialize } from '../lib/markdown';
+import { saveDraftLocal, clearDraftLocal } from '../lib/db';
 import { MOODS, MOOD_KEYS, WEATHER, WEATHER_KEYS } from '../lib/moods';
 
 /**
- * Auto-save status: 'idle' | 'saving' | 'saved'
+ * Save status indicator — shows draft/published state.
  */
-function SaveStatus({ status }) {
-  const labels = { idle: '', saving: '正在保存…', saved: '已保存' };
+function SaveStatus({ status, isDraft }) {
+  const labels = {
+    idle: '',
+    saving_local: '草稿已保存在本地',
+    saving_cloud: '正在同步…',
+    saved_cloud: '草稿已同步至云端',
+    saved: '已保存',
+    publishing: '发布中…',
+    published: '已发布',
+  };
   return (
-    <span className={`save-status ${status}`}>
+    <span className={`save-status ${status === 'idle' ? 'idle' : 'saving'}`}>
       <span className="dot" />
-      <span>{labels[status]}</span>
+      <span className="text-[11px]">{labels[status] || ''}</span>
     </span>
   );
 }
@@ -27,7 +36,6 @@ function SaveStatus({ status }) {
 function CapsuleSelector({ label, items, value, onChange }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-
   const selected = value ? items.find((i) => i.key === value) : null;
 
   useEffect(() => {
@@ -50,9 +58,7 @@ function CapsuleSelector({ label, items, value, onChange }) {
       >
         <span className="text-[11px] text-zinc-500">{label}</span>
         {selected ? (
-          <span className="flex items-center gap-1">
-            <span>{selected.emoji}</span>
-          </span>
+          <span className="flex items-center gap-1"><span>{selected.emoji}</span></span>
         ) : (
           <span className="text-zinc-600 text-xs">选择</span>
         )}
@@ -80,16 +86,10 @@ function CapsuleSelector({ label, items, value, onChange }) {
                 transition={{ delay: i * 0.03, type: 'spring', stiffness: 500, damping: 25 }}
                 whileHover={{ scale: 1.15 }}
                 whileTap={{ scale: 0.92 }}
-                onClick={() => {
-                  onChange(isActive ? null : item.key);
-                  setOpen(false);
-                }}
+                onClick={() => { onChange(isActive ? null : item.key); setOpen(false); }}
                 title={item.label}
                 className={`relative flex items-center justify-center w-9 h-9 rounded-full
-                  ${isActive
-                    ? 'bg-white/[0.08]'
-                    : 'hover:bg-white/[0.04] opacity-60 hover:opacity-100'
-                  }`}
+                  ${isActive ? 'bg-white/[0.08]' : 'hover:bg-white/[0.04] opacity-60 hover:opacity-100'}`}
               >
                 <span className="text-lg">{item.emoji}</span>
                 {isActive && item.color && (
@@ -114,14 +114,12 @@ function CapsuleSelector({ label, items, value, onChange }) {
 /**
  * DiaryEditor — Moonlight Zen immersive writing interface.
  *
- * Supports dual-mode rendering:
- *   - type='diary': TipTap rich text editor
- *   - type='memo': InlineChecklist
- *
- * The TypeToggle capsule switches between modes in real-time,
- * updating the database entry type and morphing the UI.
+ * Draft/Publish system:
+ *   - Every change: instant localStorage save (0ms)
+ *   - Stop typing 2s: auto-save to Supabase as 'draft'
+ *   - Click Publish: set status='published', clear local draft
  */
-export default function DiaryEditor({ entry, onSave, onBack }) {
+export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
   const [title, setTitle] = useState(entry.title);
   const [type, setType] = useState(entry.type || 'diary');
   const [todos, setTodos] = useState(entry.todos || []);
@@ -131,39 +129,68 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
   const [saveStatus, setSaveStatus] = useState('idle');
   const dateInputRef = useRef(null);
 
+  const isDraft = (entry.status || 'draft') === 'draft';
+
   const titleTimerRef = useRef(null);
   const contentTimerRef = useRef(null);
   const todosTimerRef = useRef(null);
+  const cloudTimerRef = useRef(null);
   const statusTimerRef = useRef(null);
   const lastSavedContentRef = useRef(null);
   const onSaveRef = useRef(onSave);
+  const onPublishRef = useRef(onPublish);
+  const entryIdRef = useRef(entry.id);
 
   useEffect(() => { onSaveRef.current = onSave; }, [onSave]);
+  useEffect(() => { onPublishRef.current = onPublish; }, [onPublish]);
   useEffect(() => {
     setTitle(entry.title);
     setType(entry.type || 'diary');
     setTodos(entry.todos || []);
+    setMood(entry.mood || null);
+    setWeather(entry.weather || null);
     setCreatedAt(entry.createdAt);
+    entryIdRef.current = entry.id;
   }, [entry.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     return () => {
       clearTimeout(titleTimerRef.current);
       clearTimeout(contentTimerRef.current);
       clearTimeout(todosTimerRef.current);
+      clearTimeout(cloudTimerRef.current);
       clearTimeout(statusTimerRef.current);
     };
   }, []);
 
+  /**
+   * Schedule a cloud save with 2-second debounce.
+   * The actual save always sets status='draft'.
+   */
+  const scheduleCloudSave = useCallback((patch) => {
+    clearTimeout(cloudTimerRef.current);
+    clearTimeout(statusTimerRef.current);
+    setSaveStatus('saving_cloud');
+    cloudTimerRef.current = setTimeout(() => {
+      onSaveRef.current({ ...patch, status: 'draft' });
+      setSaveStatus('saved_cloud');
+      statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
+    }, 2000);
+  }, []);
+
+  /**
+   * Instant local save + schedule cloud save.
+   */
+  const handleFieldChange = useCallback((field, value, patch) => {
+    // 1. Instant localStorage save (0ms)
+    saveDraftLocal(entryIdRef.current, { [field]: value });
+    setSaveStatus('saving_local');
+    // 2. Schedule cloud save (2s debounce)
+    scheduleCloudSave(patch);
+  }, [scheduleCloudSave]);
+
   const handleTitleChange = (e) => {
     setTitle(e.target.value);
-    clearTimeout(titleTimerRef.current);
-    clearTimeout(statusTimerRef.current);
-    setSaveStatus('saving');
-    titleTimerRef.current = setTimeout(() => {
-      onSaveRef.current({ title: e.target.value });
-      setSaveStatus('saved');
-      statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2500);
-    }, 1500);
+    handleFieldChange('title', e.target.value, { title: e.target.value });
   };
 
   const handleMoodChange = useCallback((newMood) => {
@@ -186,29 +213,28 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
 
   const handleDateClick = useCallback(() => {
     if (dateInputRef.current) {
-      if (dateInputRef.current.showPicker) {
-        dateInputRef.current.showPicker();
-      } else {
-        dateInputRef.current.click();
-      }
+      if (dateInputRef.current.showPicker) dateInputRef.current.showPicker();
+      else dateInputRef.current.click();
     }
   }, []);
 
   const handleContentUpdate = useCallback((json) => {
     const jsonStr = JSON.stringify(json);
     if (jsonStr === lastSavedContentRef.current) return;
-    clearTimeout(contentTimerRef.current);
+    lastSavedContentRef.current = jsonStr;
+    // Instant local save
+    saveDraftLocal(entryIdRef.current, { content: json });
+    setSaveStatus('saving_local');
+    // Schedule cloud save (2s debounce)
+    clearTimeout(cloudTimerRef.current);
     clearTimeout(statusTimerRef.current);
-    setSaveStatus('saving');
-    contentTimerRef.current = setTimeout(() => {
-      lastSavedContentRef.current = jsonStr;
-      onSaveRef.current({ content: json });
-      setSaveStatus('saved');
-      statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2500);
-    }, 1500);
+    cloudTimerRef.current = setTimeout(() => {
+      onSaveRef.current({ content: json, status: 'draft' });
+      setSaveStatus('saved_cloud');
+      statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
+    }, 2000);
   }, []);
 
-  // Type toggle — morphs the editor UI and persists to database
   const handleTypeChange = useCallback((newType) => {
     setType(newType);
     onSaveRef.current({ type: newType });
@@ -216,22 +242,41 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
 
   const handleTodosChange = useCallback((newTodos) => {
     setTodos(newTodos);
+    saveDraftLocal(entryIdRef.current, { todos: newTodos });
+    setSaveStatus('saving_local');
     clearTimeout(todosTimerRef.current);
+    clearTimeout(cloudTimerRef.current);
     clearTimeout(statusTimerRef.current);
-    setSaveStatus('saving');
     todosTimerRef.current = setTimeout(() => {
-      onSaveRef.current({ todos: newTodos });
-      setSaveStatus('saved');
-      statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2500);
-    }, 800);
+      cloudTimerRef.current = setTimeout(() => {
+        onSaveRef.current({ todos: newTodos, status: 'draft' });
+        setSaveStatus('saved_cloud');
+        statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
+      }, 2000);
+    }, 300);
   }, []);
 
   const handleBlur = useCallback(() => {
-    clearTimeout(contentTimerRef.current);
-    contentTimerRef.current = null;
+    // Flush any pending saves on blur
+    clearTimeout(cloudTimerRef.current);
     clearTimeout(statusTimerRef.current);
-    setSaveStatus('saved');
-    statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2500);
+    onSaveRef.current({ status: 'draft' });
+    setSaveStatus('saved_cloud');
+    statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
+  }, []);
+
+  /**
+   * Publish — set status to 'published', clear local draft.
+   */
+  const handlePublish = useCallback(() => {
+    clearTimeout(cloudTimerRef.current);
+    clearTimeout(statusTimerRef.current);
+    setSaveStatus('publishing');
+    // Flush any pending content first
+    onSaveRef.current({ status: 'published' });
+    clearDraftLocal(entryIdRef.current);
+    setSaveStatus('published');
+    onPublishRef.current?.();
   }, []);
 
   const entryDate = new Date(createdAt);
@@ -269,8 +314,8 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
           <span>返回</span>
         </button>
 
-        <div className="flex items-center gap-4">
-          <SaveStatus status={saveStatus} />
+        <div className="flex items-center gap-3">
+          <SaveStatus status={saveStatus} isDraft={isDraft} />
           <button
             onClick={handleExport}
             className="p-1.5 rounded-full text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04] transition-colors"
@@ -278,13 +323,24 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
           >
             <Download size={14} />
           </button>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={handlePublish}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full
+              bg-white/[0.08] border border-white/[0.06] backdrop-blur-md
+              text-sm text-zinc-200 hover:text-white hover:bg-white/[0.12]
+              transition-all duration-200"
+          >
+            <Send size={13} />
+            <span>{isDraft ? '发布' : '保存'}</span>
+          </motion.button>
         </div>
       </div>
 
-      {/* Editor area — zen glow + generous breathing room */}
+      {/* Editor area */}
       <div className="flex-1 overflow-y-auto zen-glow">
         <div className="diary-editor max-w-[680px] mx-auto px-6 md:px-8 pt-28 md:pt-32 pb-40 relative z-10">
-          {/* Date — editable on hover */}
+          {/* Date */}
           <div className="mb-8">
             <button
               onClick={handleDateClick}
@@ -304,7 +360,7 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
             />
           </div>
 
-          {/* Title — literary serif with wide tracking */}
+          {/* Title */}
           <input
             value={title}
             onChange={handleTitleChange}
@@ -314,24 +370,14 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
             style={{ fontFamily: 'var(--font-serif)' }}
           />
 
-          {/* Type toggle + Mood + Weather capsules */}
+          {/* Type toggle + Mood + Weather */}
           <div className="flex items-center gap-2.5 mt-6 mb-8 flex-wrap">
             <TypeToggle type={type} onChange={handleTypeChange} />
-            <CapsuleSelector
-              label="心情"
-              items={moodItems}
-              value={mood}
-              onChange={handleMoodChange}
-            />
-            <CapsuleSelector
-              label="天气"
-              items={weatherItems}
-              value={weather}
-              onChange={handleWeatherChange}
-            />
+            <CapsuleSelector label="心情" items={moodItems} value={mood} onChange={handleMoodChange} />
+            <CapsuleSelector label="天气" items={weatherItems} value={weather} onChange={handleWeatherChange} />
           </div>
 
-          {/* Editor — morphs based on type */}
+          {/* Editor */}
           {type === 'diary' ? (
             <TipTapEditor
               content={entry.content}
@@ -341,10 +387,7 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
               autoFocus={!entry.title}
             />
           ) : (
-            <InlineChecklist
-              todos={todos}
-              onChange={handleTodosChange}
-            />
+            <InlineChecklist todos={todos} onChange={handleTodosChange} />
           )}
         </div>
       </div>

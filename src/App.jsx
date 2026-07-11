@@ -5,6 +5,7 @@ import EntryEditor from './components/EntryEditor';
 import EmptyState from './components/EmptyState';
 import DiaryPage from './components/DiaryPage';
 import MemoPage from './components/MemoPage';
+import DraftsPage from './components/DraftsPage';
 import AuthScreen from './components/AuthScreen';
 import MobileHeader from './components/MobileHeader';
 import MobileDrawer from './components/MobileDrawer';
@@ -23,14 +24,15 @@ import * as db from './lib/db';
  * Derive a db filter object from the sidebar view id.
  */
 function viewToFilter(view) {
-  if (view === 'all') return {};
-  if (view === 'diary') return { type: 'diary' };
-  if (view === 'memo') return { type: 'memo' };
-  if (view === 'pinned') return {};
-  if (view === 'favorited') return {};
-  if (view.startsWith('tag:')) return { tag: view.slice(4) };
-  if (view.startsWith('folder:')) return { folder: view.slice(7) };
-  return {};
+  if (view === 'all') return { status: 'published' };
+  if (view === 'diary') return { type: 'diary', status: 'published' };
+  if (view === 'memo') return { type: 'memo', status: 'published' };
+  if (view === 'drafts') return { status: 'draft' };
+  if (view === 'pinned') return { status: 'published' };
+  if (view === 'favorited') return { status: 'published' };
+  if (view.startsWith('tag:')) return { tag: view.slice(4), status: 'published' };
+  if (view.startsWith('folder:')) return { folder: view.slice(7), status: 'published' };
+  return { status: 'published' };
 }
 
 export default function App() {
@@ -239,6 +241,39 @@ export default function App() {
             onClose={() => setActiveView('all')}
             syncVersion={syncVersion}
           />
+        </div>
+        <ChangePasswordModal
+          open={showChangePassword}
+          onClose={() => setShowChangePassword(false)}
+          onSubmit={handleChangePassword}
+          onSignOut={signOut}
+        />
+      </div>
+    );
+  }
+
+  /* ---- Drafts mode ---- */
+  if (activeView === 'drafts') {
+    return (
+      <div className="flex h-screen bg-surface">
+        <div className={`hidden md:block immersive-sidebar ${isDiaryEditing ? 'collapsed' : ''}`}>
+          <Sidebar {...sidebarProps} />
+        </div>
+        <MobileDrawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          {...sidebarProps}
+        />
+        <div className="flex-1 flex flex-col min-w-0">
+          {!isDiaryEditing && (
+            <MobileHeader
+              activeView={activeView}
+              onMenuOpen={() => setDrawerOpen(true)}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+          )}
+          <DraftsPage onLocalChange={onLocalChange} onEditingChange={setIsDiaryEditing} syncVersion={syncVersion} />
         </div>
         <ChangePasswordModal
           open={showChangePassword}

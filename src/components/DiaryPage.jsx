@@ -106,6 +106,7 @@ export default function DiaryPage({ onLocalChange, onEditingChange, syncVersion 
 
   const { entries, create, update, remove, refresh } = useEntries({
     type: 'diary',
+    status: 'published',
     search,
   }, syncVersion);
 
@@ -124,13 +125,18 @@ export default function DiaryPage({ onLocalChange, onEditingChange, syncVersion 
   const handleSave = useCallback(
     (patch) => {
       if (activeId) {
-        // update() writes to db AND updates parent's entries state in one pass.
-        // No separate save()/refresh() — single source of truth, no cascade.
         update(activeId, patch);
       }
     },
     [activeId, update],
   );
+
+  const handlePublish = useCallback(() => {
+    if (activeId) {
+      update(activeId, { status: 'published' });
+      onLocalChange?.();
+    }
+  }, [activeId, update, onLocalChange]);
 
   const handleBack = useCallback(() => {
     setActiveId(null);
@@ -213,6 +219,7 @@ export default function DiaryPage({ onLocalChange, onEditingChange, syncVersion 
         key={activeEntry.id}
         entry={activeEntry}
         onSave={handleSave}
+        onPublish={handlePublish}
         onBack={handleBack}
       />
     );
