@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef, memo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef, memo } from 'react';
 import { format } from 'date-fns';
 import { Plus, BookOpen, Search, Star, Pin, Upload } from 'lucide-react';
 import DiaryEditor from './DiaryEditor';
