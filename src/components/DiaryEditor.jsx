@@ -3,18 +3,13 @@ import { format } from 'date-fns';
 import { ChevronLeft, Download } from 'lucide-react';
 import TipTapEditor from './TipTapEditor';
 import { serialize } from '../lib/markdown';
-import { MOODS, MOOD_KEYS } from '../lib/moods';
+import { MOODS, MOOD_KEYS, WEATHER, WEATHER_KEYS } from '../lib/moods';
 
 /**
  * Auto-save status: 'idle' | 'saving' | 'saved'
  */
 function SaveStatus({ status }) {
-  const labels = {
-    idle: '',
-    saving: '正在保存…',
-    saved: '已保存',
-  };
-
+  const labels = { idle: '', saving: '正在保存…', saved: '已保存' };
   return (
     <span className={`save-status ${status}`}>
       <span className="dot" />
@@ -24,52 +19,99 @@ function SaveStatus({ status }) {
 }
 
 /**
- * Mood Pill — macaron grayscale → color on hover/select.
+ * Capsule selector — reusable for mood and weather.
+ * Shows a compact pill that expands into icon options on click.
+ *
+ * Props:
+ *   - label: string (e.g. "心情")
+ *   - items: { key, emoji, label, color? }[]
+ *   - value: string | null
+ *   - onChange: (key | null) => void
  */
-function MoodPill({ mood, onChange }) {
+function CapsuleSelector({ label, items, value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  const selected = value ? items.find((i) => i.key === value) : null;
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handle = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [open]);
+
   return (
-    <div className="mood-pill">
-      <span className="text-[11px] text-zinc-500 mr-1 select-none">心情</span>
-      {MOOD_KEYS.map((key) => {
-        const m = MOODS[key];
-        const isActive = mood === key;
-        return (
-          <button
-            key={key}
-            onClick={() => onChange(isActive ? null : key)}
-            title={m.label}
-            className={`mood-item ${isActive ? 'selected' : ''}`}
-          >
-            <span className="text-base">{m.emoji}</span>
-            <div
-              className="mood-glow"
-              style={{ backgroundColor: m.color }}
-            />
-          </button>
-        );
-      })}
+    <div ref={ref} className="relative inline-flex">
+      {/* Capsule button */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-full
+          bg-zinc-900/30 border border-white/[0.04] backdrop-blur-md
+          text-sm text-zinc-400 hover:text-zinc-200 hover:border-white/[0.08]
+          transition-all duration-200 select-none"
+      >
+        <span className="text-[11px] text-zinc-500">{label}</span>
+        {selected ? (
+          <span className="flex items-center gap-1">
+            <span>{selected.emoji}</span>
+          </span>
+        ) : (
+          <span className="text-zinc-600 text-xs">选择</span>
+        )}
+      </button>
+
+      {/* Popover */}
+      {open && (
+        <div className="absolute top-full left-0 mt-2 z-30
+          bg-zinc-900/90 border border-white/[0.06] backdrop-blur-xl rounded-2xl
+          px-2 py-2 flex items-center gap-1
+          shadow-[0_8px_30px_rgba(0,0,0,0.5)]
+          animate-in fade-in slide-in-from-top-1 duration-200"
+        >
+          {items.map((item) => {
+            const isActive = value === item.key;
+            return (
+              <button
+                key={item.key}
+                onClick={() => {
+                  onChange(isActive ? null : item.key);
+                  setOpen(false);
+                }}
+                title={item.label}
+                className={`relative flex items-center justify-center w-9 h-9 rounded-full
+                  transition-all duration-200
+                  ${isActive
+                    ? 'bg-white/[0.08] scale-110'
+                    : 'hover:bg-white/[0.04] hover:scale-105 opacity-60 hover:opacity-100'
+                  }`}
+              >
+                <span className="text-lg">{item.emoji}</span>
+                {isActive && item.color && (
+                  <div
+                    className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
 
 /**
  * DiaryEditor — Moonlight Zen immersive writing interface.
- *
- * Design principles:
- *   - Zen glow ambient light at top
- *   - Serif title with literary tracking
- *   - Mood pill (grayscale → macaron color)
- *   - max-w-2xl centered with generous breathing room
- *   - pt-28 top whitespace for "paper on empty desk" feel
- *
- * Auto-save architecture:
- *   - TipTapEditor fires onUpdate immediately (no debounce)
- *   - DiaryEditor debounces by 1.5s
- *   - onBlur triggers immediate save
  */
 export default function DiaryEditor({ entry, onSave, onBack }) {
   const [title, setTitle] = useState(entry.title);
   const [mood, setMood] = useState(entry.mood || null);
+  const [weather, setWeather] = useState(entry.weather || null);
   const [saveStatus, setSaveStatus] = useState('idle');
 
   const titleTimerRef = useRef(null);
@@ -78,14 +120,8 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
   const lastSavedContentRef = useRef(null);
   const onSaveRef = useRef(onSave);
 
-  useEffect(() => {
-    onSaveRef.current = onSave;
-  }, [onSave]);
-
-  useEffect(() => {
-    setTitle(entry.title);
-  }, [entry.id]);
-
+  useEffect(() => { onSaveRef.current = onSave; }, [onSave]);
+  useEffect(() => { setTitle(entry.title); }, [entry.id]);
   useEffect(() => {
     return () => {
       clearTimeout(titleTimerRef.current);
@@ -109,6 +145,11 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
   const handleMoodChange = useCallback((newMood) => {
     setMood(newMood);
     onSaveRef.current({ mood: newMood });
+  }, []);
+
+  const handleWeatherChange = useCallback((newWeather) => {
+    setWeather(newWeather);
+    onSaveRef.current({ weather: newWeather });
   }, []);
 
   const handleContentUpdate = useCallback((json) => {
@@ -151,6 +192,14 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, [entry.title, entry.content, entryDate]);
+
+  // Prepare items for capsule selectors
+  const moodItems = MOOD_KEYS.map((key) => ({
+    key, ...MOODS[key],
+  }));
+  const weatherItems = WEATHER_KEYS.map((key) => ({
+    key, ...WEATHER[key],
+  }));
 
   return (
     <div className="flex-1 flex flex-col h-screen overflow-hidden bg-surface">
@@ -195,9 +244,20 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
             style={{ fontFamily: 'var(--font-serif)' }}
           />
 
-          {/* Mood Pill */}
-          <div className="mt-6 mb-10">
-            <MoodPill mood={mood} onChange={handleMoodChange} />
+          {/* Mood + Weather capsules — aligned to title's left edge */}
+          <div className="flex items-center gap-2.5 mt-6 mb-10">
+            <CapsuleSelector
+              label="心情"
+              items={moodItems}
+              value={mood}
+              onChange={handleMoodChange}
+            />
+            <CapsuleSelector
+              label="天气"
+              items={weatherItems}
+              value={weather}
+              onChange={handleWeatherChange}
+            />
           </div>
 
           {/* TipTap editor — fully uncontrolled */}

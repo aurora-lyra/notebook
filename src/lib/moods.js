@@ -15,6 +15,19 @@ export const MOODS = {
 
 export const MOOD_KEYS = Object.keys(MOODS);
 
+/**
+ * Weather configuration — minimal icons.
+ */
+export const WEATHER = {
+  sunny:    { label: '晴', emoji: '☀️' },
+  cloudy:   { label: '多云', emoji: '⛅' },
+  rainy:    { label: '雨', emoji: '🌧️' },
+  stormy:   { label: '雷', emoji: '⛈️' },
+  snowy:    { label: '雪', emoji: '❄️' },
+};
+
+export const WEATHER_KEYS = Object.keys(WEATHER);
+
 export const MOOD_EMPTY_COLOR = '#2a2a2e'; // very faint dark gray for empty days
 
 /**
