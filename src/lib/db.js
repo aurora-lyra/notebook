@@ -94,6 +94,7 @@ export function createEntry(overrides = {}) {
     pinned: false,
     favorited: false,
     coverUrl: '',
+    mood: null,
     reminderAt: null,
     relatedIds: [],
     attachments: [],

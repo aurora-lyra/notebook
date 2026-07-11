@@ -10,6 +10,7 @@ import MobileHeader from './components/MobileHeader';
 import MobileDrawer from './components/MobileDrawer';
 import FAB from './components/FAB';
 import ChangePasswordModal from './components/ChangePasswordModal';
+import YearInPixels from './components/YearInPixels';
 import { useEntries, useEntry } from './hooks/useEntries';
 import { useAuth } from './hooks/useAuth';
 import { useSync } from './hooks/useSync';
@@ -77,6 +78,9 @@ export default function App() {
 
   // syncVersion forces re-read from localStorage when remote changes arrive
   const { entries, create, update, remove, refresh } = useEntries(filter, syncVersion);
+
+  // All diary entries for Year in Pixels (unfiltered)
+  const { entries: allDiaryEntries } = useEntries({ type: 'diary' }, syncVersion);
 
   const filteredEntries = useMemo(() => {
     if (activeView === 'pinned') return entries.filter((e) => e.pinned);
@@ -351,8 +355,12 @@ export default function App() {
                 onClose={handleClose}
               />
             ) : (
-              <div className="hidden md:block">
-                <EmptyState onNewEntry={handleNewEntry} />
+              <div className="hidden md:block overflow-y-auto">
+                {(activeView === 'all' || activeView === 'diary') ? (
+                  <YearInPixels entries={allDiaryEntries} />
+                ) : (
+                  <EmptyState onNewEntry={handleNewEntry} />
+                )}
               </div>
             )}
           </div>

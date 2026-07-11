@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { ChevronLeft, Calendar, Download } from 'lucide-react';
 import TipTapEditor from './TipTapEditor';
 import { serialize } from '../lib/markdown';
+import { MOODS, MOOD_KEYS } from '../lib/moods';
 
 /**
  * Auto-save status: 'idle' | 'saving' | 'saved'
@@ -38,6 +39,7 @@ function SaveStatus({ status }) {
  */
 export default function DiaryEditor({ entry, onSave, onBack }) {
   const [title, setTitle] = useState(entry.title);
+  const [mood, setMood] = useState(entry.mood || null);
   const [saveStatus, setSaveStatus] = useState('idle');
 
   // Separate timer refs for title and content saves — they must not cancel each other
@@ -81,6 +83,15 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
   };
 
   // ─── Content save: 1.5s debounce (reset on every call) ───
+
+  // ─── Mood save: immediate ───
+  const handleMoodChange = useCallback(
+    (newMood) => {
+      setMood(newMood);
+      onSaveRef.current({ mood: newMood });
+    },
+    [],
+  );
   const handleContentUpdate = useCallback(
     (json) => {
       // Deduplicate: skip if content hasn't changed since last save
@@ -184,6 +195,40 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
             className="w-full text-2xl font-bold text-ink placeholder:text-ink-faint outline-none bg-transparent leading-tight tracking-tight"
             style={{ fontFamily: 'var(--font-sans)', letterSpacing: '-0.025em' }}
           />
+
+          {/* Mood selector */}
+          <div className="flex items-center gap-1 mt-4">
+            <span className="text-xs text-ink-faint mr-1.5">今天心情</span>
+            {MOOD_KEYS.map((key) => {
+              const m = MOODS[key];
+              const isActive = mood === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => handleMoodChange(isActive ? null : key)}
+                  title={m.label}
+                  className={`relative w-7 h-7 rounded-full flex items-center justify-center text-sm
+                    transition-all duration-150
+                    ${isActive
+                      ? 'ring-2 ring-offset-1 ring-offset-surface scale-110'
+                      : 'opacity-50 hover:opacity-100 hover:scale-105'
+                    }`}
+                  style={{
+                    backgroundColor: m.color + '30',
+                    ringColor: isActive ? m.color : undefined,
+                  }}
+                >
+                  <span>{m.emoji}</span>
+                  {isActive && (
+                    <div
+                      className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+                      style={{ backgroundColor: m.color }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
           {/* Divider */}
           <div className="mt-6 mb-8 border-t border-border" />
