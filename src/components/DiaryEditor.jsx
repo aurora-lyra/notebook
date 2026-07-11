@@ -12,13 +12,10 @@ import { MOODS, MOOD_KEYS, WEATHER, WEATHER_KEYS } from '../lib/moods';
 /**
  * Save status indicator — shows draft/published state.
  */
-function SaveStatus({ status, isDraft }) {
+function SaveStatus({ status }) {
   const labels = {
     idle: '',
-    saving_local: '草稿已保存在本地',
-    saving_cloud: '正在同步…',
-    saved_cloud: '草稿已同步至云端',
-    saved: '已保存',
+    saved: '草稿已保存在本地',
     publishing: '发布中…',
     published: '已发布',
   };
@@ -114,10 +111,9 @@ function CapsuleSelector({ label, items, value, onChange }) {
 /**
  * DiaryEditor — Moonlight Zen immersive writing interface.
  *
- * Draft/Publish system:
+ * Draft system (local-only, no cloud auto-save):
  *   - Every change: instant localStorage save (0ms)
- *   - Stop typing 2s: auto-save to Supabase as 'draft'
- *   - Click Publish: set status='published', clear local draft
+ *   - Click Publish: set status='published', clear local draft, sync to cloud
  */
 export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
   const [title, setTitle] = useState(entry.title);
@@ -131,10 +127,6 @@ export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
 
   const isDraft = (entry.status || 'draft') === 'draft';
 
-  const titleTimerRef = useRef(null);
-  const contentTimerRef = useRef(null);
-  const todosTimerRef = useRef(null);
-  const cloudTimerRef = useRef(null);
   const statusTimerRef = useRef(null);
   const lastSavedContentRef = useRef(null);
   const onSaveRef = useRef(onSave);
@@ -154,62 +146,48 @@ export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
   }, [entry.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     return () => {
-      clearTimeout(titleTimerRef.current);
-      clearTimeout(contentTimerRef.current);
-      clearTimeout(todosTimerRef.current);
-      clearTimeout(cloudTimerRef.current);
       clearTimeout(statusTimerRef.current);
     };
   }, []);
 
-  /**
-   * Schedule a cloud save with 2-second debounce.
-   * The actual save always sets status='draft'.
-   */
-  const scheduleCloudSave = useCallback((patch) => {
-    clearTimeout(cloudTimerRef.current);
+  /** Flash a status message for 2 seconds. */
+  const flashStatus = useCallback((status) => {
     clearTimeout(statusTimerRef.current);
-    setSaveStatus('saving_cloud');
-    cloudTimerRef.current = setTimeout(() => {
-      onSaveRef.current({ ...patch, status: 'draft' });
-      setSaveStatus('saved_cloud');
-      statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
-    }, 2000);
+    setSaveStatus(status);
+    statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2000);
   }, []);
 
-  /**
-   * Instant local save + schedule cloud save.
-   */
-  const handleFieldChange = useCallback((field, value, patch) => {
-    // 1. Instant localStorage save (0ms)
+  /** Instant local save — no cloud sync. */
+  const handleFieldChange = useCallback((field, value) => {
     saveDraftLocal(entryIdRef.current, { [field]: value });
-    setSaveStatus('saving_local');
-    // 2. Schedule cloud save (2s debounce)
-    scheduleCloudSave(patch);
-  }, [scheduleCloudSave]);
+    flashStatus('saved');
+  }, [flashStatus]);
 
   const handleTitleChange = (e) => {
     setTitle(e.target.value);
-    handleFieldChange('title', e.target.value, { title: e.target.value });
+    handleFieldChange('title', e.target.value);
   };
 
   const handleMoodChange = useCallback((newMood) => {
     setMood(newMood);
-    onSaveRef.current({ mood: newMood });
-  }, []);
+    saveDraftLocal(entryIdRef.current, { mood: newMood });
+    flashStatus('saved');
+  }, [flashStatus]);
 
   const handleWeatherChange = useCallback((newWeather) => {
     setWeather(newWeather);
-    onSaveRef.current({ weather: newWeather });
-  }, []);
+    saveDraftLocal(entryIdRef.current, { weather: newWeather });
+    flashStatus('saved');
+  }, [flashStatus]);
 
   const handleDateChange = useCallback((e) => {
     const val = e.target.value;
     if (!val) return;
     const newDate = new Date(val).toISOString();
     setCreatedAt(newDate);
-    onSaveRef.current({ createdAt: newDate });
-  }, []);
+    saveDraftLocal(entryIdRef.current, { createdAt: newDate });
+    flashStatus('saved');
+  }, [flashStatus]);
 
   const handleDateClick = useCallback(() => {
     if (dateInputRef.current) {
@@ -222,57 +200,32 @@ export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
     const jsonStr = JSON.stringify(json);
     if (jsonStr === lastSavedContentRef.current) return;
     lastSavedContentRef.current = jsonStr;
-    // Instant local save
     saveDraftLocal(entryIdRef.current, { content: json });
-    setSaveStatus('saving_local');
-    // Schedule cloud save (2s debounce)
-    clearTimeout(cloudTimerRef.current);
-    clearTimeout(statusTimerRef.current);
-    cloudTimerRef.current = setTimeout(() => {
-      onSaveRef.current({ content: json, status: 'draft' });
-      setSaveStatus('saved_cloud');
-      statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
-    }, 2000);
-  }, []);
+    flashStatus('saved');
+  }, [flashStatus]);
 
   const handleTypeChange = useCallback((newType) => {
     setType(newType);
-    onSaveRef.current({ type: newType });
-  }, []);
+    saveDraftLocal(entryIdRef.current, { type: newType });
+    flashStatus('saved');
+  }, [flashStatus]);
 
   const handleTodosChange = useCallback((newTodos) => {
     setTodos(newTodos);
     saveDraftLocal(entryIdRef.current, { todos: newTodos });
-    setSaveStatus('saving_local');
-    clearTimeout(todosTimerRef.current);
-    clearTimeout(cloudTimerRef.current);
-    clearTimeout(statusTimerRef.current);
-    todosTimerRef.current = setTimeout(() => {
-      cloudTimerRef.current = setTimeout(() => {
-        onSaveRef.current({ todos: newTodos, status: 'draft' });
-        setSaveStatus('saved_cloud');
-        statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
-      }, 2000);
-    }, 300);
-  }, []);
+    flashStatus('saved');
+  }, [flashStatus]);
 
   const handleBlur = useCallback(() => {
-    // Flush any pending saves on blur
-    clearTimeout(cloudTimerRef.current);
-    clearTimeout(statusTimerRef.current);
-    onSaveRef.current({ status: 'draft' });
-    setSaveStatus('saved_cloud');
-    statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
+    // No-op — all saves are already local-only
   }, []);
 
   /**
-   * Publish — set status to 'published', clear local draft.
+   * Publish — set status to 'published', clear local draft, sync to cloud.
    */
   const handlePublish = useCallback(() => {
-    clearTimeout(cloudTimerRef.current);
     clearTimeout(statusTimerRef.current);
     setSaveStatus('publishing');
-    // Flush any pending content first
     onSaveRef.current({ status: 'published' });
     clearDraftLocal(entryIdRef.current);
     setSaveStatus('published');
@@ -315,7 +268,7 @@ export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
         </button>
 
         <div className="flex items-center gap-3">
-          <SaveStatus status={saveStatus} isDraft={isDraft} />
+          <SaveStatus status={saveStatus} />
           <button
             onClick={handleExport}
             className="p-1.5 rounded-full text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04] transition-colors"

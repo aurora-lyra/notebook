@@ -1,30 +1,70 @@
 import { useState, useCallback, useMemo, useRef, memo } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { Plus, CheckSquare, Search } from 'lucide-react';
+import { Plus, CheckSquare, Search, Send, ListChecks } from 'lucide-react';
 import InlineChecklist from './InlineChecklist';
 import SwipeableRow from './SwipeableRow';
+import BatchActionBar from './BatchActionBar';
 import { useEntries } from '../hooks/useEntries';
 import { useReminders } from '../hooks/useReminders';
 
 /**
  * Single memo item in the list — memoized.
  */
-const MemoItem = memo(function MemoItem({ entry, isActive, onSelect }) {
+const MemoItem = memo(function MemoItem({ entry, isActive, onSelect, selectMode, isSelected, onToggleSelect, onLongPress }) {
   const todos = entry.todos || [];
   const total = todos.filter((t) => t.text.trim()).length;
   const done = todos.filter((t) => t.done).length;
   const date = new Date(entry.createdAt);
+  const longPressTimer = useRef(null);
+
+  const handlePointerDown = useCallback(() => {
+    longPressTimer.current = setTimeout(() => {
+      onLongPress?.(entry.id);
+    }, 500);
+  }, [entry.id, onLongPress]);
+
+  const handlePointerUp = useCallback(() => {
+    clearTimeout(longPressTimer.current);
+  }, []);
+
+  const handleClick = useCallback(() => {
+    if (selectMode) {
+      onToggleSelect?.(entry.id);
+    } else {
+      onSelect(entry.id);
+    }
+  }, [selectMode, entry.id, onSelect, onToggleSelect]);
 
   return (
     <div
-      onClick={() => onSelect(entry.id)}
-      className={`group px-4 md:px-5 py-3 md:py-4 cursor-pointer border-b border-border transition-colors
-        ${isActive
+      onClick={handleClick}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerUp}
+      className={`group relative px-4 md:px-5 py-3 md:py-4 cursor-pointer border-b border-border transition-colors
+        ${isActive && !selectMode
           ? 'bg-surface-active border-l-2 border-l-ink'
-          : 'hover:bg-surface-hover border-l-2 border-l-transparent'
+          : isSelected
+            ? 'bg-accent/5 border-l-2 border-l-accent'
+            : 'hover:bg-surface-hover border-l-2 border-l-transparent'
         }`}
     >
+      {/* Selection checkbox */}
+      {selectMode && (
+        <div className="absolute top-3 right-3 z-10">
+          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
+            ${isSelected ? 'bg-accent border-accent' : 'border-ink-faint'}`}
+          >
+            {isSelected && (
+              <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Date */}
       <p className="text-xs text-ink-faint mb-1.5 tracking-wide">
         {format(date, 'M月d日 EEEE')}
@@ -83,11 +123,13 @@ function MemoEmpty({ onNew }) {
 export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
   const [activeId, setActiveId] = useState(null);
   const [search, setSearch] = useState('');
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   // Poll for due reminders
   useReminders();
 
-  const { entries, create, update, remove, refresh } = useEntries({
+  const { entries, create, update, remove, batchRemove, refresh } = useEntries({
     type: 'memo',
     status: 'published',
     search,
@@ -105,17 +147,17 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
       todos: [],
     });
     setActiveId(entry.id);
-    onLocalChange?.();
-  }, [create, onLocalChange]);
+    // No onLocalChange — new entries are local-only drafts
+  }, [create]);
 
   const handleTodosChange = useCallback(
     (newTodos) => {
       if (activeId) {
         update(activeId, { todos: newTodos });
-        onLocalChange?.();
+        // Local-only — no onLocalChange
       }
     },
-    [activeId, update, onLocalChange],
+    [activeId, update],
   );
 
   const titleRef = useRef('');
@@ -125,17 +167,26 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
       titleRef.current = e.target.value;
       if (activeId) {
         update(activeId, { title: e.target.value });
-        onLocalChange?.();
+        // Local-only — no onLocalChange
       }
     },
-    [activeId, update, onLocalChange],
+    [activeId, update],
   );
 
   const handleTitleBlur = useCallback(() => {
     // Flush title on blur — ensures save even if onChange was missed
     if (activeId && titleRef.current) {
       update(activeId, { title: titleRef.current });
+      // Local-only — no onLocalChange
+    }
+  }, [activeId, update]);
+
+  /** Publish — sync to cloud. */
+  const handlePublish = useCallback(() => {
+    if (activeId) {
+      update(activeId, { status: 'published' });
       onLocalChange?.();
+      setActiveId(null);
     }
   }, [activeId, update, onLocalChange]);
 
@@ -174,6 +225,43 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
     [entries, update, onLocalChange],
   );
 
+  /* ---- Batch selection ---- */
+  const enterSelectMode = useCallback((id) => {
+    setSelectMode(true);
+    setSelectedIds(new Set([id]));
+  }, []);
+
+  const exitSelectMode = useCallback(() => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  }, []);
+
+  const toggleSelect = useCallback((id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const selectAll = useCallback(() => {
+    setSelectedIds(new Set(entries.map((e) => e.id)));
+  }, [entries]);
+
+  const deselectAll = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleBatchDelete = useCallback(() => {
+    if (selectedIds.size === 0) return;
+    const confirmed = window.confirm(`确定删除选中的 ${selectedIds.size} 个备忘录？`);
+    if (!confirmed) return;
+    batchRemove([...selectedIds]);
+    onLocalChange?.();
+    exitSelectMode();
+  }, [selectedIds, batchRemove, onLocalChange, exitSelectMode]);
+
   // If editing, show full-screen checklist editor
   if (activeEntry) {
     const todos = activeEntry.todos || [];
@@ -189,6 +277,20 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
           >
             ← 返回
           </button>
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] text-zinc-600">草稿已保存在本地</span>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handlePublish}
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full
+                bg-white/[0.08] border border-white/[0.06] backdrop-blur-md
+                text-sm text-zinc-200 hover:text-white hover:bg-white/[0.12]
+                transition-all duration-200"
+            >
+              <Send size={13} />
+              <span>发布</span>
+            </motion.button>
+          </div>
         </div>
 
         {/* Checklist editor area */}
@@ -236,13 +338,33 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
             <h1 className="text-base font-semibold text-ink">备忘录</h1>
             <span className="text-xs text-ink-faint ml-1">{entries.length} 个</span>
           </div>
-          <button
-            onClick={handleNew}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-ink text-surface text-xs font-medium hover:opacity-90 transition-opacity"
-          >
-            <Plus size={13} />
-            新备忘录
-          </button>
+          <div className="flex items-center gap-2">
+            {selectMode ? (
+              <button
+                onClick={exitSelectMode}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-ink-secondary text-xs font-medium hover:bg-surface-hover transition-colors"
+              >
+                取消
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => setSelectMode(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-ink-secondary text-xs font-medium hover:bg-surface-hover transition-colors"
+                >
+                  <ListChecks size={13} />
+                  管理
+                </button>
+                <button
+                  onClick={handleNew}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-ink text-surface text-xs font-medium hover:opacity-90 transition-opacity"
+                >
+                  <Plus size={13} />
+                  新备忘录
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Search */}
@@ -271,23 +393,48 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
               exit={{ opacity: 0, y: -12 }}
               transition={{ type: 'spring', stiffness: 350, damping: 28 }}
             >
-              <SwipeableRow
-                onPin={() => handlePin(entry.id)}
-                onDelete={() => handleDelete(entry.id)}
-                onFavorite={() => handleFavorite(entry.id)}
-                isPinned={entry.pinned}
-                isFavorited={entry.favorited}
-              >
+              {selectMode ? (
                 <MemoItem
                   entry={entry}
-                  isActive={activeId === entry.id}
+                  isActive={false}
                   onSelect={setActiveId}
+                  selectMode={selectMode}
+                  isSelected={selectedIds.has(entry.id)}
+                  onToggleSelect={toggleSelect}
+                  onLongPress={enterSelectMode}
                 />
-              </SwipeableRow>
+              ) : (
+                <SwipeableRow
+                  onPin={() => handlePin(entry.id)}
+                  onDelete={() => handleDelete(entry.id)}
+                  onFavorite={() => handleFavorite(entry.id)}
+                  isPinned={entry.pinned}
+                  isFavorited={entry.favorited}
+                >
+                  <MemoItem
+                    entry={entry}
+                    isActive={activeId === entry.id}
+                    onSelect={setActiveId}
+                    selectMode={false}
+                    isSelected={false}
+                    onLongPress={enterSelectMode}
+                  />
+                </SwipeableRow>
+              )}
             </motion.div>
           ))}
         </div>
       )}
+
+      {/* Batch action bar */}
+      <BatchActionBar
+        selectedCount={selectedIds.size}
+        totalCount={entries.length}
+        onSelectAll={selectAll}
+        onDeselectAll={deselectAll}
+        onDelete={handleBatchDelete}
+        onExit={exitSelectMode}
+      />
     </div>
   );
 }

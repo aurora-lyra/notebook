@@ -460,6 +460,21 @@ export async function fullSync() {
   }
 }
 
+/**
+ * Push all local entries to cloud immediately (no debounce).
+ * Used for batch upload from settings.
+ */
+export async function pushAll() {
+  if (!currentUserId || !isConfigured()) {
+    throw new Error('未配置云端或未登录');
+  }
+
+  clearPushTimer();
+  await pushEntries(currentUserId);
+  await pushTodos(currentUserId);
+  lastPushTime = Date.now();
+}
+
 /* ============================================================
    Realtime subscriptions
    ============================================================ */

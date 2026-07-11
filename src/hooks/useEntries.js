@@ -100,7 +100,25 @@ export function useEntries(filter = {}, syncVersion = 0) {
     [],
   );
 
-  return { entries, create, update, remove, restore, refresh };
+  /** Batch delete multiple entries. Returns deleted entries for rollback. */
+  const batchRemove = useCallback(
+    (ids) => {
+      const deleted = [];
+      for (const id of ids) {
+        const entry = db.getEntry(id);
+        if (entry) {
+          db.deleteEntry(id);
+          queueDeletion(id);
+          deleted.push(entry);
+        }
+      }
+      setEntries((prev) => prev.filter((e) => !ids.includes(e.id)));
+      return deleted;
+    },
+    [],
+  );
+
+  return { entries, create, update, remove, restore, batchRemove, refresh };
 }
 
 /**

@@ -1,13 +1,14 @@
 import { useState, useCallback, useMemo, useEffect, memo } from 'react';
 import { format } from 'date-fns';
-import { Inbox, Search } from 'lucide-react';
+import { Inbox, Search, FileEdit } from 'lucide-react';
 import DiaryEditor from './DiaryEditor';
 import { useEntries } from '../hooks/useEntries';
+import { readDraftLocal, clearDraftLocal } from '../lib/db';
 
 /**
  * Single draft item in the list.
  */
-const DraftItem = memo(function DraftItem({ entry, isActive, onSelect }) {
+const DraftItem = memo(function DraftItem({ entry, isActive, onSelect, isModified }) {
   const isMemo = entry.type === 'memo';
   const date = new Date(entry.createdAt);
 
@@ -34,9 +35,17 @@ const DraftItem = memo(function DraftItem({ entry, isActive, onSelect }) {
           : 'hover:bg-surface-hover border-l-2 border-l-transparent'
         }`}
     >
-      <p className="text-xs text-ink-faint mb-1.5 tracking-wide">
-        {format(date, 'M月d日 EEEE')} · {isMemo ? '备忘录' : '日记'}
-      </p>
+      <div className="flex items-center gap-2 mb-1.5">
+        <p className="text-xs text-ink-faint tracking-wide">
+          {format(date, 'M月d日 EEEE')} · {isMemo ? '备忘录' : '日记'}
+        </p>
+        {isModified && (
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-accent/10 text-accent">
+            <FileEdit size={10} />
+            已修改
+          </span>
+        )}
+      </div>
       <h3 className="text-sm font-medium text-ink leading-snug line-clamp-1 mb-1">
         {entry.title || '无标题草稿'}
       </h3>
@@ -65,9 +74,9 @@ function DraftsEmpty() {
 }
 
 /**
- * DraftsPage — shows all unpublished drafts (diary + memo).
+ * DraftsPage — shows all unpublished drafts + modified published entries.
  */
-export default function DraftsPage({ onLocalChange, onEditingChange, syncVersion = 0 }) {
+export default function DraftsPage({ onLocalChange, onPublish, onEditingChange, syncVersion = 0 }) {
   const [activeId, setActiveId] = useState(null);
   const [search, setSearch] = useState('');
 
@@ -75,14 +84,49 @@ export default function DraftsPage({ onLocalChange, onEditingChange, syncVersion
     onEditingChange?.(!!activeId);
   }, [activeId, onEditingChange]);
 
-  const { entries, create, update, remove, refresh } = useEntries({
+  // New unpublished drafts
+  const { entries: draftEntries, create, update, remove, refresh } = useEntries({
     status: 'draft',
     search,
   }, syncVersion);
 
+  // All published entries (to check for modifications)
+  const { entries: publishedEntries } = useEntries({
+    status: 'published',
+  }, syncVersion);
+
+  // Modified published entries — merge draft data with published entry
+  const modifiedEntries = useMemo(() => {
+    return publishedEntries
+      .filter((entry) => {
+        const draft = readDraftLocal(entry.id);
+        return !!draft;
+      })
+      .map((entry) => {
+        const draft = readDraftLocal(entry.id);
+        return {
+          ...entry,
+          ...draft,
+          _isModified: true,
+          _originalId: entry.id,
+        };
+      })
+      .filter((entry) => {
+        if (!search) return true;
+        const q = search.toLowerCase();
+        return (entry.title || '').toLowerCase().includes(q);
+      });
+  }, [publishedEntries, search]);
+
+  // Combine both lists, drafts first
+  const allDrafts = useMemo(() => [
+    ...draftEntries.map((e) => ({ ...e, _isModified: false })),
+    ...modifiedEntries,
+  ], [draftEntries, modifiedEntries]);
+
   const activeEntry = useMemo(
-    () => (activeId ? entries.find((e) => e.id === activeId) || null : null),
-    [entries, activeId],
+    () => (activeId ? allDrafts.find((e) => e.id === activeId) || null : null),
+    [allDrafts, activeId],
   );
 
   const handleSave = useCallback(
@@ -95,12 +139,23 @@ export default function DraftsPage({ onLocalChange, onEditingChange, syncVersion
   );
 
   const handlePublish = useCallback(() => {
-    if (activeId) {
+    if (!activeId) return;
+
+    // Check if this is a modified published entry
+    const draft = activeEntry;
+    if (draft?._isModified) {
+      // Update the original published entry with draft content
+      const { _isModified, _originalId, id, ...draftData } = draft;
+      update(_originalId, { ...draftData, status: 'published' });
+      clearDraftLocal(_originalId);
+      onPublish?.({ status: 'published' });
+    } else {
+      // New draft — just set status to published
       update(activeId, { status: 'published' });
-      setActiveId(null);
       onLocalChange?.();
     }
-  }, [activeId, update, onLocalChange]);
+    setActiveId(null);
+  }, [activeId, activeEntry, update, onLocalChange, onPublish]);
 
   const handleBack = useCallback(() => {
     setActiveId(null);
@@ -136,7 +191,7 @@ export default function DraftsPage({ onLocalChange, onEditingChange, syncVersion
           <div className="flex items-center gap-2">
             <Inbox size={18} className="text-ink" />
             <h1 className="text-base font-semibold text-ink">草稿箱</h1>
-            <span className="text-xs text-ink-faint ml-1">{entries.length} 篇</span>
+            <span className="text-xs text-ink-faint ml-1">{allDrafts.length} 篇</span>
           </div>
         </div>
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-hover border border-transparent focus-within:border-border transition-colors">
@@ -151,16 +206,17 @@ export default function DraftsPage({ onLocalChange, onEditingChange, syncVersion
       </div>
 
       {/* List */}
-      {entries.length === 0 ? (
+      {allDrafts.length === 0 ? (
         <DraftsEmpty />
       ) : (
         <div className="flex-1 overflow-y-auto">
-          {entries.map((entry) => (
+          {allDrafts.map((entry) => (
             <DraftItem
               key={entry.id}
               entry={entry}
               isActive={activeId === entry.id}
               onSelect={setActiveId}
+              isModified={entry._isModified}
             />
           ))}
         </div>

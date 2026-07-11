@@ -12,6 +12,8 @@ import {
   Calendar,
   Hash,
   TrendingUp,
+  Cloud,
+  Loader2,
 } from 'lucide-react';
 import { MOODS, MOOD_KEYS } from '../lib/moods';
 import { useEntries } from '../hooks/useEntries';
@@ -87,6 +89,7 @@ export default function SettingsPage({
   onToggleTheme,
   onChangePassword,
   onClose,
+  onBatchUpload,
   syncVersion = 0,
 }) {
   const [activeTab, setActiveTab] = useState('settings');
@@ -177,6 +180,7 @@ export default function SettingsPage({
             onToggleTheme={onToggleTheme}
             onChangePassword={onChangePassword}
             onExportAll={handleExportAll}
+            onBatchUpload={onBatchUpload}
             entryCount={entries.length}
           />
         ) : (
@@ -187,7 +191,26 @@ export default function SettingsPage({
   );
 }
 
-function SettingsTab({ user, isDark, onToggleTheme, onChangePassword, onExportAll, entryCount }) {
+function SettingsTab({ user, isDark, onToggleTheme, onChangePassword, onExportAll, onBatchUpload, entryCount }) {
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState(null);
+
+  const handleBatchUpload = useCallback(async () => {
+    if (!onBatchUpload) return;
+    setUploading(true);
+    setUploadResult(null);
+    try {
+      await onBatchUpload();
+      setUploadResult('success');
+    } catch (err) {
+      setUploadResult('error');
+      console.error('Batch upload failed:', err);
+    } finally {
+      setUploading(false);
+      setTimeout(() => setUploadResult(null), 3000);
+    }
+  }, [onBatchUpload]);
+
   return (
     <div className="max-w-lg mx-auto px-6 py-8 space-y-6">
       {/* Account */}
@@ -247,6 +270,33 @@ function SettingsTab({ user, isDark, onToggleTheme, onChangePassword, onExportAl
               {user ? 'Supabase + 本地' : '仅本地'}
             </span>
           </div>
+          {user && onBatchUpload && (
+            <div className="pt-2 border-t border-border">
+              <p className="text-xs text-ink-tertiary mb-2">
+                将所有已发布条目同步到云端
+              </p>
+              <button
+                onClick={handleBatchUpload}
+                disabled={uploading}
+                className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg
+                  bg-accent text-white hover:opacity-90 transition-opacity
+                  disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {uploading ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Cloud size={14} />
+                )}
+                <span>{uploading ? '上传中…' : '批量上传到云端'}</span>
+              </button>
+              {uploadResult === 'success' && (
+                <p className="text-xs text-green-400 mt-2">上传完成</p>
+              )}
+              {uploadResult === 'error' && (
+                <p className="text-xs text-red-400 mt-2">上传失败，请重试</p>
+              )}
+            </div>
+          )}
         </div>
       </Section>
 

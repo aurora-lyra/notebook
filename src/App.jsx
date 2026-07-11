@@ -18,6 +18,7 @@ import { useAuth } from './hooks/useAuth';
 import { useSync } from './hooks/useSync';
 import { useTheme } from './hooks/useTheme';
 import { supabase } from './lib/supabase';
+import { pushAll } from './lib/syncEngine';
 import * as db from './lib/db';
 
 /**
@@ -105,14 +106,27 @@ export default function App() {
       : '';
     const entry = create({ type, folder });
     setActiveEntryId(entry.id);
-    onLocalChange();
-  }, [activeView, create, onLocalChange]);
+    // No onLocalChange — new entries are local-only drafts
+  }, [activeView, create]);
 
   const handleSelectEntry = useCallback((id) => {
     setActiveEntryId(id);
   }, []);
 
+  /** Save to local only — no cloud sync. */
   const handleSave = useCallback(
+    (patch) => {
+      if (activeEntryId) {
+        save(patch);
+        refresh();
+        // No onLocalChange — drafts are local-only
+      }
+    },
+    [activeEntryId, save, refresh],
+  );
+
+  /** Publish — save + sync to cloud. */
+  const handlePublish = useCallback(
     (patch) => {
       if (activeEntryId) {
         save(patch);
@@ -157,6 +171,11 @@ export default function App() {
     },
     [remove, activeEntryId, onLocalChange],
   );
+
+  /** Batch upload all published entries to cloud. */
+  const handleBatchUpload = useCallback(async () => {
+    await pushAll();
+  }, []);
 
   const handleChangePassword = useCallback(async (currentPassword, newPassword) => {
     // First verify current password by re-authenticating
@@ -239,6 +258,7 @@ export default function App() {
             onToggleTheme={toggleTheme}
             onChangePassword={() => setShowChangePassword(true)}
             onClose={() => setActiveView('all')}
+            onBatchUpload={handleBatchUpload}
             syncVersion={syncVersion}
           />
         </div>
@@ -273,7 +293,7 @@ export default function App() {
               onSearchChange={setSearchQuery}
             />
           )}
-          <DraftsPage onLocalChange={onLocalChange} onEditingChange={setIsDiaryEditing} syncVersion={syncVersion} />
+          <DraftsPage onLocalChange={onLocalChange} onPublish={handlePublish} onEditingChange={setIsDiaryEditing} syncVersion={syncVersion} />
         </div>
         <ChangePasswordModal
           open={showChangePassword}
