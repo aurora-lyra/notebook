@@ -11,6 +11,7 @@ import MobileDrawer from './components/MobileDrawer';
 import FAB from './components/FAB';
 import ChangePasswordModal from './components/ChangePasswordModal';
 import YearInPixels from './components/YearInPixels';
+import SettingsPage from './components/SettingsPage';
 import { useEntries, useEntry } from './hooks/useEntries';
 import { useAuth } from './hooks/useAuth';
 import { useSync } from './hooks/useSync';
@@ -184,7 +185,7 @@ export default function App() {
     onSearchChange: setSearchQuery,
     user,
     onSignOut: signOut,
-    onChangePassword: user ? () => setShowChangePassword(true) : undefined,
+    onNavigateSettings: () => setActiveView('settings'),
     isDark,
     onToggleTheme: toggleTheme,
   };
@@ -207,6 +208,44 @@ export default function App() {
         onSkip={() => setSkipAuth(true)}
         connectionError={connectionError}
       />
+    );
+  }
+
+  /* ---- Settings page ---- */
+  if (activeView === 'settings') {
+    return (
+      <div className="flex h-screen bg-surface">
+        <div className="hidden md:block">
+          <Sidebar {...sidebarProps} />
+        </div>
+        <MobileDrawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          {...sidebarProps}
+        />
+        <div className="flex-1 flex flex-col min-w-0">
+          <MobileHeader
+            activeView={activeView}
+            onMenuOpen={() => setDrawerOpen(true)}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
+          <SettingsPage
+            user={user}
+            isDark={isDark}
+            onToggleTheme={toggleTheme}
+            onChangePassword={() => setShowChangePassword(true)}
+            onClose={() => setActiveView('all')}
+            syncVersion={syncVersion}
+          />
+        </div>
+        <ChangePasswordModal
+          open={showChangePassword}
+          onClose={() => setShowChangePassword(false)}
+          onSubmit={handleChangePassword}
+          onSignOut={signOut}
+        />
+      </div>
     );
   }
 

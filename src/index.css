@@ -1,11 +1,12 @@
 @import "tailwindcss";
 
 /* ========================================
-   Notion-Style Minimal Design System
+   Moonlight Zen Design System
+   Digital Wabi-Sabi × Apple Minimalism
    ======================================== */
 
 @theme {
-  /* --- Color Palette --- */
+  /* --- Color Palette (Light) --- */
   --color-ink: #191919;
   --color-ink-secondary: #6b6b6b;
   --color-ink-tertiary: #9b9b9b;
@@ -35,7 +36,7 @@
   /* --- Typography --- */
   --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
     "Noto Sans SC", sans-serif;
-  --font-serif: ui-serif, Georgia, "Noto Serif SC", serif;
+  --font-serif: ui-serif, Georgia, "Noto Serif SC", "STSong", serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
 
   --font-size-xs: 0.75rem;
@@ -64,61 +65,63 @@
   --radius-lg: 8px;
   --radius-xl: 12px;
 
-  /* --- Shadows (subtle, Notion-like) --- */
+  /* --- Shadows --- */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 1px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.06);
 
   /* --- Transitions --- */
   --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-zen: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-fast: 120ms;
   --duration-normal: 200ms;
+  --duration-zen: 500ms;
 
-  /* --- Morandi Priority Colors (muted, warm) --- */
-  --color-priority-high: #c47c6c;     /* muted terracotta */
-  --color-priority-medium: #c9a96e;   /* warm sand */
-  --color-priority-low: #8fa89a;      /* sage green */
+  /* --- Morandi Priority Colors --- */
+  --color-priority-high: #c47c6c;
+  --color-priority-medium: #c9a96e;
+  --color-priority-low: #8fa89a;
 }
 
 /* ========================================
-   Dark Mode Overrides (warm charcoal)
+   Dark Mode — Moonlight Zen
    ======================================== */
 
 [data-theme="dark"] {
-  /* Text */
-  --color-ink: #ececec;
-  --color-ink-secondary: #a0a0a0;
+  /* Text — warm moon silver, never pure white */
+  --color-ink: #e4e4e7;
+  --color-ink-secondary: #a1a1aa;
   --color-ink-tertiary: #71717a;
   --color-ink-faint: #52525b;
 
-  /* Surfaces — warm charcoal */
-  --color-surface: #18181b;
-  --color-surface-hover: #27272a;
-  --color-surface-active: #3f3f46;
-  --color-surface-raised: #27272a;
+  /* Surfaces — warm charcoal with depth */
+  --color-surface: #09090b;
+  --color-surface-hover: #18181b;
+  --color-surface-active: #27272a;
+  --color-surface-raised: #18181b;
 
-  /* Borders */
-  --color-border: #3f3f46;
-  --color-border-strong: #52525b;
+  /* Borders — whisper thin */
+  --color-border: #27272a;
+  --color-border-strong: #3f3f46;
 
-  /* Accent — slightly brighter for dark bg contrast */
-  --color-accent: #51a2e8;
-  --color-accent-hover: #6db5f0;
-  --color-accent-surface: rgba(81, 162, 232, 0.12);
+  /* Accent — moon blue */
+  --color-accent: #60a5fa;
+  --color-accent-hover: #93bbfd;
+  --color-accent-surface: rgba(96, 165, 250, 0.1);
 
   --color-danger: #f87171;
-  --color-danger-surface: rgba(248, 113, 113, 0.12);
+  --color-danger-surface: rgba(248, 113, 113, 0.1);
 
   --color-warning: #fb923c;
-  --color-warning-surface: rgba(251, 146, 60, 0.12);
+  --color-warning-surface: rgba(251, 146, 60, 0.1);
 
   --color-success: #34d399;
-  --color-success-surface: rgba(52, 211, 153, 0.12);
+  --color-success-surface: rgba(52, 211, 153, 0.1);
 
-  /* Shadows — deeper for dark mode */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 1px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 1px rgba(0, 0, 0, 0.3);
+  /* Shadows — deep, soft */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 0, 0, 0.4);
 
   /* Priority — slightly brighter */
   --color-priority-high: #d4897a;
@@ -160,14 +163,14 @@ body {
 }
 
 /* ========================================
-   TipTap Editor Overrides
+   TipTap Editor — Zen Typography
    ======================================== */
 
 .tiptap {
   outline: none;
-  font-size: var(--font-size-base);
-  line-height: 1.8;
-  letter-spacing: -0.006em;
+  font-size: 17px;
+  line-height: 1.85;
+  letter-spacing: 0.01em;
 }
 
 .tiptap p {
@@ -175,7 +178,7 @@ body {
 }
 
 .tiptap p + p {
-  margin-top: 0.5em;
+  margin-top: 0.6em;
 }
 
 .tiptap h1 {
@@ -256,7 +259,7 @@ body {
   text-underline-offset: 2px;
 }
 
-/* Placeholder styling */
+/* Placeholder */
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
@@ -266,22 +269,23 @@ body {
 }
 
 /* ========================================
-   Diary Mode — Immersive Serif Typography
+   Diary Mode — Moonlight Zen Typography
    ======================================== */
 
 .diary-editor .tiptap {
   font-family: var(--font-serif);
-  font-size: 1.0625rem;       /* 17px — slightly larger for long reading */
-  line-height: 2;              /* generous line height */
+  font-size: 17px;
+  line-height: 1.85;
   letter-spacing: 0.01em;
   color: var(--color-ink);
+  font-weight: 300;
 }
 
 .diary-editor .tiptap h1 {
-  font-family: var(--font-sans);
+  font-family: var(--font-serif);
   font-size: 1.75rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  font-weight: 400;
+  letter-spacing: 0.04em;
   margin: 1.6em 0 0.5em;
   color: var(--color-ink);
 }
@@ -289,8 +293,8 @@ body {
 .diary-editor .tiptap h2 {
   font-family: var(--font-sans);
   font-size: 1.375rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   margin: 1.3em 0 0.4em;
   color: var(--color-ink);
 }
@@ -298,15 +302,15 @@ body {
 .diary-editor .tiptap h3 {
   font-family: var(--font-sans);
   font-size: 1.125rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-weight: 500;
+  letter-spacing: -0.005em;
   margin: 1em 0 0.3em;
   color: var(--color-ink);
 }
 
 .diary-editor .tiptap p + p {
   margin-top: 0.6em;
-  text-indent: 0; /* no indent — modern style */
+  text-indent: 0;
 }
 
 .diary-editor .tiptap blockquote {
@@ -317,7 +321,6 @@ body {
   font-style: italic;
 }
 
-/* Beautiful images with rounded corners and soft shadow */
 .diary-editor .tiptap img {
   display: block;
   max-width: 100%;
@@ -374,8 +377,8 @@ body {
 }
 
 .save-status .dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--color-ink-faint);
   transition: background var(--duration-normal) var(--ease-out);
@@ -396,8 +399,12 @@ body {
 }
 
 /* ========================================
-   Dark Mode — TipTap Editor
+   Dark Mode — Diary Images
    ======================================== */
+
+[data-theme="dark"] .diary-editor .tiptap img {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
+}
 
 [data-theme="dark"] .tiptap {
   color: var(--color-ink);
@@ -422,15 +429,236 @@ body {
   color: var(--color-surface);
 }
 
-[data-theme="dark"] .diary-editor .tiptap img {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 1px 4px rgba(0, 0, 0, 0.15);
+/* ========================================
+   Moonlight Zen — Ambient Glow
+   ======================================== */
+
+.zen-glow {
+  position: relative;
+}
+
+.zen-glow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 800px;
+  height: 300px;
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(124, 58, 237, 0.04) 0%,
+    rgba(59, 130, 246, 0.02) 40%,
+    transparent 80%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme="dark"] .zen-glow::before {
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(124, 58, 237, 0.06) 0%,
+    rgba(59, 130, 246, 0.03) 40%,
+    transparent 80%
+  );
 }
 
 /* ========================================
-   Drag-and-Drop Styles
+   Floating Glass Toolbar
    ======================================== */
 
-/* Drag overlay — the ghost card following the cursor */
+.glass-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 6px 4px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(24, 24, 27, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.glass-toolbar .tb-divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.glass-toolbar .tb-btn {
+  padding: 6px 8px;
+  border-radius: 8px;
+  color: #a1a1aa;
+  transition: all 0.15s ease-out;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.glass-toolbar .tb-btn:hover {
+  color: #e4e4e7;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.glass-toolbar .tb-btn.active {
+  color: #e4e4e7;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ========================================
+   Mood Pill
+   ======================================== */
+
+.mood-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(24, 24, 27, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.mood-pill .mood-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease-out;
+  filter: grayscale(1);
+  opacity: 0.3;
+}
+
+.mood-pill .mood-item:hover {
+  filter: none;
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.mood-pill .mood-item.selected {
+  filter: none;
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.mood-pill .mood-item .mood-glow {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 6px;
+  border-radius: 50%;
+  filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.mood-pill .mood-item.selected .mood-glow {
+  opacity: 0.6;
+  animation: mood-breathe 3s ease-in-out infinite;
+}
+
+@keyframes mood-breathe {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+}
+
+/* ========================================
+   Immersive Sidebar Transition
+   ======================================== */
+
+.immersive-sidebar {
+  transition: all 500ms cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.immersive-sidebar.collapsed {
+  width: 0 !important;
+  opacity: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+}
+
+/* ========================================
+   Settings Tabs
+   ======================================== */
+
+.settings-tab {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--color-ink-tertiary);
+  transition: all 0.2s ease-out;
+  cursor: pointer;
+}
+
+.settings-tab:hover {
+  color: var(--color-ink-secondary);
+  background: var(--color-surface-hover);
+}
+
+.settings-tab.active {
+  color: var(--color-ink);
+  background: var(--color-surface-active);
+  font-weight: 500;
+}
+
+/* ========================================
+   Stats Cards
+   ======================================== */
+
+.stat-card {
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+}
+
+.stat-card .stat-value {
+  font-size: 1.75rem;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  font-family: var(--font-serif);
+}
+
+.stat-card .stat-label {
+  font-size: 12px;
+  color: var(--color-ink-tertiary);
+  margin-top: 2px;
+}
+
+/* Progress bar for mood distribution */
+.mood-bar {
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--color-surface-active);
+}
+
+.mood-bar-segment {
+  height: 100%;
+  transition: width 0.5s var(--ease-zen);
+}
+
+/* ========================================
+   Drag-and-Drop
+   ======================================== */
+
 .drag-overlay {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
   border-radius: var(--radius-lg);
@@ -439,7 +667,7 @@ body {
 }
 
 [data-theme="dark"] .drag-overlay {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* ========================================
@@ -448,8 +676,8 @@ body {
 
 @media (max-width: 767px) {
   .diary-editor .tiptap {
-    font-size: 1rem;
-    line-height: 1.8;
+    font-size: 16px;
+    line-height: 1.75;
   }
 
   .diary-editor .tiptap h1 {
@@ -465,7 +693,10 @@ body {
   }
 }
 
-/* Drawer animation */
+/* ========================================
+   Drawer Animation
+   ======================================== */
+
 .drawer-overlay {
   transition: opacity 0.3s ease;
 }
@@ -478,7 +709,10 @@ body {
   background: rgba(0, 0, 0, 0.7);
 }
 
-/* Hide scrollbar but keep scroll functionality */
+/* ========================================
+   Utilities
+   ======================================== */
+
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;

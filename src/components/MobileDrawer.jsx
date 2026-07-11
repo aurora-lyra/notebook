@@ -51,7 +51,7 @@ export default function MobileDrawer({
   folders = [],
   user = null,
   onSignOut,
-  onChangePassword,
+  onNavigateSettings,
   isDark = false,
   onToggleTheme,
 }) {
@@ -230,10 +230,10 @@ export default function MobileDrawer({
                 </span>
               </div>
               <div className="flex items-center gap-0.5">
-                {onChangePassword && (
+                {onNavigateSettings && (
                   <button
-                    onClick={() => { onChangePassword(); onClose(); }}
-                    title="修改密码"
+                    onClick={() => { onNavigateSettings(); onClose(); }}
+                    title="设置"
                     className="p-1 rounded hover:bg-surface-active text-ink-tertiary hover:text-ink transition-colors"
                   >
                     <Settings size={13} />

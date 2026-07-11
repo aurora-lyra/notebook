@@ -46,7 +46,7 @@ export default function Sidebar({
   onSearchChange,
   user = null,
   onSignOut,
-  onChangePassword,
+  onNavigateSettings,
   isDark = false,
   onToggleTheme,
 }) {
@@ -188,10 +188,10 @@ export default function Sidebar({
               </span>
             </div>
             <div className="flex items-center gap-0.5">
-              {onChangePassword && (
+              {onNavigateSettings && (
                 <button
-                  onClick={onChangePassword}
-                  title="修改密码"
+                  onClick={onNavigateSettings}
+                  title="设置"
                   className="p-1 rounded hover:bg-surface-active text-ink-tertiary hover:text-ink transition-colors"
                 >
                   <Settings size={13} />

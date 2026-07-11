@@ -51,7 +51,7 @@ function getImageFromTransfer(dt) {
 }
 
 /**
- * Toolbar button — minimal, consistent sizing.
+ * Glass toolbar button — ultra-thin line icons.
  */
 function ToolbarBtn({ active, onClick, children, title }) {
   return (
@@ -60,35 +60,22 @@ function ToolbarBtn({ active, onClick, children, title }) {
       title={title}
       aria-label={title}
       onClick={onClick}
-      className={`p-1.5 rounded-md transition-colors duration-fast ease-out shrink-0
-        ${active
-          ? 'bg-surface-active text-ink'
-          : 'text-ink-secondary hover:bg-surface-hover hover:text-ink'
-        }`}
+      className={`tb-btn ${active ? 'active' : ''}`}
     >
       {children}
     </button>
   );
 }
 
-function ToolbarDivider() {
-  return <div className="w-px h-4 bg-border mx-0.5 shrink-0" />;
-}
-
 /**
- * Fixed top toolbar for the editor.
- * Sticky at top of scroll container with backdrop blur.
- * Horizontal scroll on mobile to prevent button overflow.
+ * Floating glass toolbar — rounded pill, centered at top.
  */
 function EditorToolbar({ editor, fileInputRef }) {
   if (!editor) return null;
 
   return (
-    <div
-      className="sticky top-0 z-10 flex items-center gap-0.5 px-2 py-1.5
-        bg-surface/80 backdrop-blur-md border-b border-border
-        overflow-x-auto scrollbar-none"
-    >
+    <div className="sticky top-0 z-10 flex justify-center py-2">
+    <div className="glass-toolbar overflow-x-auto scrollbar-none">
       {/* Inline formatting */}
       <ToolbarBtn
         title="加粗"
@@ -112,7 +99,7 @@ function EditorToolbar({ editor, fileInputRef }) {
         <UnderlineIcon size={15} />
       </ToolbarBtn>
 
-      <ToolbarDivider />
+      <div className="tb-divider" />
 
       {/* Headings */}
       <ToolbarBtn
@@ -130,7 +117,7 @@ function EditorToolbar({ editor, fileInputRef }) {
         <Heading2 size={15} />
       </ToolbarBtn>
 
-      <ToolbarDivider />
+      <div className="tb-divider" />
 
       {/* Block elements */}
       <ToolbarBtn
@@ -155,7 +142,7 @@ function EditorToolbar({ editor, fileInputRef }) {
         <ListOrdered size={15} />
       </ToolbarBtn>
 
-      <ToolbarDivider />
+      <div className="tb-divider" />
 
       {/* Insert */}
       <ToolbarBtn
@@ -170,6 +157,7 @@ function EditorToolbar({ editor, fileInputRef }) {
       >
         <Minus size={15} />
       </ToolbarBtn>
+    </div>
     </div>
   );
 }
