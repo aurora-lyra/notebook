@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import * as db from '../lib/db';
+import { queueDeletion } from '../lib/syncEngine';
 
 /**
  * Apply filter + sort to an entries array.
@@ -15,7 +16,8 @@ function applyFilter(entries, filter) {
     result = result.filter(
       (e) =>
         e.title.toLowerCase().includes(q) ||
-        (e.content && JSON.stringify(e.content).toLowerCase().includes(q)),
+        (e.content && JSON.stringify(e.content).toLowerCase().includes(q)) ||
+        (e.todos && e.todos.some((t) => t.text.toLowerCase().includes(q))),
     );
   }
   return [...result].sort((a, b) => {
@@ -70,15 +72,34 @@ export function useEntries(filter = {}, syncVersion = 0) {
 
   const remove = useCallback(
     (id) => {
+      // Capture the entry BEFORE deleting (for potential rollback)
+      const deletedEntry = db.getEntry(id);
       // Optimistic: remove from UI immediately via prev.filter
       // db.deleteEntry mutates the cache + flushes to localStorage (side effect)
       db.deleteEntry(id);
       setEntries((prev) => prev.filter((e) => e.id !== id));
+      // Register for cloud deletion (will be picked up by next sync push)
+      queueDeletion(id);
+      // Return the deleted entry so callers can rollback on failure
+      return deletedEntry;
     },
     [],
   );
 
-  return { entries, create, update, remove, refresh };
+  const restore = useCallback(
+    (entry) => {
+      if (!entry) return;
+      // Push back into localStorage cache
+      db.restoreEntry(entry);
+      // Re-insert into UI state
+      setEntries((prev) =>
+        applyFilter([...prev, entry], filterRef.current),
+      );
+    },
+    [],
+  );
+
+  return { entries, create, update, remove, restore, refresh };
 }
 
 /**

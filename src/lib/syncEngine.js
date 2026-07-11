@@ -14,9 +14,41 @@ import { invalidateCache } from './db';
 
 const PUSH_DEBOUNCE = 800; // ms before pushing changes
 const PUSH_ECHO_GRACE = 2500; // ms to suppress Realtime echo after push
+const PENDING_DELETIONS_KEY = 'notebook_pending_deletions';
 let pushTimer = null;
 let currentUserId = null;
 let lastPushTime = 0; // timestamp of last completed push
+
+/* ============================================================
+   Pending deletions tracking
+   ============================================================ */
+
+function readPendingDeletions() {
+  try {
+    const raw = localStorage.getItem(PENDING_DELETIONS_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function writePendingDeletions(set) {
+  localStorage.setItem(PENDING_DELETIONS_KEY, JSON.stringify([...set]));
+}
+
+/** Register an entry ID for deferred cloud deletion. */
+export function queueDeletion(id) {
+  const pending = readPendingDeletions();
+  pending.add(id);
+  writePendingDeletions(pending);
+}
+
+/** Clear a successfully-deleted ID from the pending set. */
+function clearPendingDeletion(id) {
+  const pending = readPendingDeletions();
+  pending.delete(id);
+  writePendingDeletions(pending);
+}
 
 /* ============================================================
    Naming convention helpers
@@ -30,6 +62,8 @@ function entryToRemote(entry, userId) {
     title: entry.title,
     content: entry.content,
     type: entry.type,
+    mode: entry.mode || 'text',
+    todos: entry.todos || [],
     tags: entry.tags,
     folder: entry.folder,
     pinned: entry.pinned,
@@ -49,6 +83,8 @@ function entryFromRemote(row) {
     title: row.title || '',
     content: row.content,
     type: row.type,
+    mode: row.mode || 'text',
+    todos: row.todos || [],
     tags: row.tags || [],
     folder: row.folder || '',
     pinned: row.pinned || false,
@@ -141,6 +177,37 @@ function resolveConflict(local, remote) {
 async function pushEntries(userId) {
   if (!isConfigured()) return;
 
+  // ─── Step 1: Push pending deletions ───
+  const pending = readPendingDeletions();
+  if (pending.size > 0) {
+    const idsToDelete = [...pending];
+    console.log('[Sync] Deleting entries from cloud:', idsToDelete);
+
+    const { data: deletedRows, error: deleteError } = await supabase
+      .from('entries')
+      .delete()
+      .eq('user_id', userId)
+      .in('id', idsToDelete)
+      .select('id');
+
+    if (deleteError) {
+      console.error('[Sync] Cloud delete failed:', deleteError);
+      // Keep in pending — will retry on next sync
+    } else {
+      const deletedIds = new Set((deletedRows || []).map((r) => r.id));
+      for (const id of idsToDelete) {
+        if (deletedIds.has(id)) {
+          clearPendingDeletion(id);
+          console.log('[Sync] Deleted entry from cloud:', id);
+        } else {
+          // ID not found on server (already deleted or never synced) — clear anyway
+          clearPendingDeletion(id);
+        }
+      }
+    }
+  }
+
+  // ─── Step 2: Upsert remaining local entries ───
   const locals = readLocalEntries();
   if (locals.length === 0) return;
 
@@ -169,7 +236,12 @@ async function pushEntries(userId) {
   }
 
   if (toUpsert.length > 0) {
-    await supabase.from('entries').upsert(toUpsert, { onConflict: 'id' });
+    const { error: upsertError } = await supabase
+      .from('entries')
+      .upsert(toUpsert, { onConflict: 'id' });
+    if (upsertError) {
+      console.error('[Sync] Cloud upsert failed:', upsertError);
+    }
   }
 }
 
@@ -218,11 +290,16 @@ async function pullEntries(userId) {
 
   if (!remotes) return;
 
+  // Filter out entries that are pending deletion
+  const pending = readPendingDeletions();
   const locals = readLocalEntries();
   const localMap = new Map(locals.map((l) => [l.id, l]));
   const merged = [];
 
   for (const remote of remotes) {
+    // Skip entries that we've locally deleted but haven't synced yet
+    if (pending.has(remote.id)) continue;
+
     const local = localMap.get(remote.id);
     const remoteEntry = entryFromRemote(remote);
 

@@ -8,13 +8,18 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================
 -- 2. 笔记条目表 (entries)
+-- 迁移：如已有表，执行以下 ALTER 添加新列：
+--   ALTER TABLE entries ADD COLUMN IF NOT EXISTS mode TEXT DEFAULT 'text';
+--   ALTER TABLE entries ADD COLUMN IF NOT EXISTS todos JSONB DEFAULT '[]';
 -- ============================================
 CREATE TABLE IF NOT EXISTS entries (
   id          TEXT PRIMARY KEY,              -- 客户端生成的 ID (Date.now base36 + random)
   user_id     UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title       TEXT DEFAULT '',
   content     JSONB,                         -- TipTap JSON
-  type        TEXT NOT NULL DEFAULT 'memo' CHECK (type IN ('diary', 'memo')),
+  type        TEXT NOT NULL DEFAULT 'diary' CHECK (type IN ('diary', 'memo')),
+  mode        TEXT NOT NULL DEFAULT 'text' CHECK (mode IN ('text', 'checklist')),
+  todos       JSONB DEFAULT '[]',            -- 清单模式待办数据（嵌入式）
   tags        TEXT[] DEFAULT '{}',
   folder      TEXT DEFAULT '',
   pinned      BOOLEAN DEFAULT false,

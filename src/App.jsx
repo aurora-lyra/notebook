@@ -293,37 +293,35 @@ export default function App() {
   if (activeView === 'memo') {
     return (
       <div className="flex h-screen bg-surface">
-        {/* Desktop sidebar */}
-        <div className="hidden md:block">
+        <div className={`hidden md:block immersive-sidebar ${isDiaryEditing ? 'collapsed' : ''}`}>
           <Sidebar {...sidebarProps} />
         </div>
 
-        {/* Mobile drawer */}
         <MobileDrawer
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
           {...sidebarProps}
         />
 
-        {/* Mobile header + content */}
         <div className="flex-1 flex flex-col min-w-0">
-          <MobileHeader
-            activeView={activeView}
-            onMenuOpen={() => setDrawerOpen(true)}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-          />
+          {!isDiaryEditing && (
+            <MobileHeader
+              activeView={activeView}
+              onMenuOpen={() => setDrawerOpen(true)}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+          )}
           <MemoPage onLocalChange={onLocalChange} syncVersion={syncVersion} />
         </div>
 
-        {/* FAB — memo mode: new task */}
         <FAB
           onNewDiary={() => {
             setActiveView('diary');
             setTimeout(() => handleNewEntry(), 50);
           }}
           onNewTask={() => {
-            // Focus is handled by MemoPage internally
+            // Focus handled by MemoPage internally
           }}
         />
 

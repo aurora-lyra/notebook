@@ -65,7 +65,8 @@ export function listEntries(filter = {}) {
     entries = entries.filter(
       (e) =>
         e.title.toLowerCase().includes(q) ||
-        (e.content && JSON.stringify(e.content).toLowerCase().includes(q)),
+        (e.content && JSON.stringify(e.content).toLowerCase().includes(q)) ||
+        (e.todos && e.todos.some((t) => t.text.toLowerCase().includes(q))),
     );
   }
 
@@ -94,6 +95,8 @@ export function createEntry(overrides = {}) {
     pinned: false,
     favorited: false,
     coverUrl: '',
+    mode: 'text',
+    todos: [],
     mood: null,
     weather: null,
     reminderAt: null,
@@ -126,16 +129,25 @@ export function updateEntry(id, patch) {
 
 /**
  * Delete an entry by id.
- * Returns the updated entries array (filtered) to avoid a second readAll.
+ * Returns the deleted entry (or null if not found).
  */
 export function deleteEntry(id) {
   const entries = loadCache();
   const idx = entries.findIndex((e) => e.id === id);
-  if (idx !== -1) {
-    entries.splice(idx, 1);
-    flushCache();
-  }
-  return entries;
+  if (idx === -1) return null;
+  const [deleted] = entries.splice(idx, 1);
+  flushCache();
+  return deleted;
+}
+
+/**
+ * Restore a previously deleted entry (rollback).
+ * Pushes it back into the cache and flushes to localStorage.
+ */
+export function restoreEntry(entry) {
+  if (!entry) return;
+  loadCache().push(entry);
+  flushCache();
 }
 
 /* ---- Tags & Folders (derived from cache) ---- */

@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { getDueReminders, markReminded } from '../lib/todoStore';
+import * as db from '../lib/db';
 import { notify, requestPermission } from '../lib/notifier';
 
 /**
- * Hook that polls for due reminders and sends notifications.
+ * Hook that polls for due reminders from entry-embedded todos.
+ * Scans all entries' todos arrays for items with dueAt <= now.
  * Checks every 30 seconds.
  */
 export function useReminders(onNavigate) {
@@ -14,17 +15,31 @@ export function useReminders(onNavigate) {
     requestPermission();
 
     function check() {
-      const due = getDueReminders();
-      for (const todo of due) {
-        notify(
-          '待办提醒',
-          todo.text,
-          {
+      const now = new Date();
+      const entries = db.listEntries();
+
+      for (const entry of entries) {
+        if (!entry.todos || entry.type !== 'memo') continue;
+
+        let hasChanges = false;
+        const updatedTodos = entry.todos.map((todo) => {
+          if (todo.done || !todo.dueAt || todo.remindedAt) return todo;
+          if (new Date(todo.dueAt) > now) return todo;
+
+          // This todo is due — send notification
+          notify('待办提醒', todo.text, {
             tag: `todo-${todo.id}`,
             onclick: () => onNavigate?.(),
-          },
-        );
-        markReminded(todo.id);
+          });
+
+          hasChanges = true;
+          return { ...todo, remindedAt: now.toISOString() };
+        });
+
+        // Persist remindedAt changes
+        if (hasChanges) {
+          db.updateEntry(entry.id, { todos: updatedTodos });
+        }
       }
     }
 

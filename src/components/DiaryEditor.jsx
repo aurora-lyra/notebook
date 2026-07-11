@@ -1,7 +1,9 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
-import { ChevronLeft, Download, CalendarDays } from 'lucide-react';
+import { ChevronLeft, Download } from 'lucide-react';
 import TipTapEditor from './TipTapEditor';
+import TypeToggle from './TypeToggle';
+import InlineChecklist from './InlineChecklist';
 import { serialize } from '../lib/markdown';
 import { MOODS, MOOD_KEYS, WEATHER, WEATHER_KEYS } from '../lib/moods';
 
@@ -20,13 +22,6 @@ function SaveStatus({ status }) {
 
 /**
  * Capsule selector — reusable for mood and weather.
- * Shows a compact pill that expands into icon options on click.
- *
- * Props:
- *   - label: string (e.g. "心情")
- *   - items: { key, emoji, label, color? }[]
- *   - value: string | null
- *   - onChange: (key | null) => void
  */
 function CapsuleSelector({ label, items, value, onChange }) {
   const [open, setOpen] = useState(false);
@@ -34,7 +29,6 @@ function CapsuleSelector({ label, items, value, onChange }) {
 
   const selected = value ? items.find((i) => i.key === value) : null;
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const handle = (e) => {
@@ -46,7 +40,6 @@ function CapsuleSelector({ label, items, value, onChange }) {
 
   return (
     <div ref={ref} className="relative inline-flex">
-      {/* Capsule button */}
       <button
         onClick={() => setOpen(!open)}
         className="inline-flex items-center gap-2 px-4 py-2 rounded-full
@@ -64,7 +57,6 @@ function CapsuleSelector({ label, items, value, onChange }) {
         )}
       </button>
 
-      {/* Popover */}
       {open && (
         <div className="absolute top-full left-0 mt-2 z-30
           bg-zinc-900/90 border border-white/[0.06] backdrop-blur-xl rounded-2xl
@@ -107,9 +99,18 @@ function CapsuleSelector({ label, items, value, onChange }) {
 
 /**
  * DiaryEditor — Moonlight Zen immersive writing interface.
+ *
+ * Supports dual-mode rendering:
+ *   - type='diary': TipTap rich text editor
+ *   - type='memo': InlineChecklist
+ *
+ * The TypeToggle capsule switches between modes in real-time,
+ * updating the database entry type and morphing the UI.
  */
 export default function DiaryEditor({ entry, onSave, onBack }) {
   const [title, setTitle] = useState(entry.title);
+  const [type, setType] = useState(entry.type || 'diary');
+  const [todos, setTodos] = useState(entry.todos || []);
   const [mood, setMood] = useState(entry.mood || null);
   const [weather, setWeather] = useState(entry.weather || null);
   const [createdAt, setCreatedAt] = useState(entry.createdAt);
@@ -118,6 +119,7 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
 
   const titleTimerRef = useRef(null);
   const contentTimerRef = useRef(null);
+  const todosTimerRef = useRef(null);
   const statusTimerRef = useRef(null);
   const lastSavedContentRef = useRef(null);
   const onSaveRef = useRef(onSave);
@@ -125,12 +127,15 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
   useEffect(() => { onSaveRef.current = onSave; }, [onSave]);
   useEffect(() => {
     setTitle(entry.title);
+    setType(entry.type || 'diary');
+    setTodos(entry.todos || []);
     setCreatedAt(entry.createdAt);
-  }, [entry.id]);
+  }, [entry.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     return () => {
       clearTimeout(titleTimerRef.current);
       clearTimeout(contentTimerRef.current);
+      clearTimeout(todosTimerRef.current);
       clearTimeout(statusTimerRef.current);
     };
   }, []);
@@ -158,7 +163,7 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
   }, []);
 
   const handleDateChange = useCallback((e) => {
-    const val = e.target.value; // "2026-07-12T14:30"
+    const val = e.target.value;
     if (!val) return;
     const newDate = new Date(val).toISOString();
     setCreatedAt(newDate);
@@ -166,7 +171,6 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
   }, []);
 
   const handleDateClick = useCallback(() => {
-    // Trigger the hidden native date picker
     if (dateInputRef.current) {
       if (dateInputRef.current.showPicker) {
         dateInputRef.current.showPicker();
@@ -188,6 +192,24 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
       setSaveStatus('saved');
       statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2500);
     }, 1500);
+  }, []);
+
+  // Type toggle — morphs the editor UI and persists to database
+  const handleTypeChange = useCallback((newType) => {
+    setType(newType);
+    onSaveRef.current({ type: newType });
+  }, []);
+
+  const handleTodosChange = useCallback((newTodos) => {
+    setTodos(newTodos);
+    clearTimeout(todosTimerRef.current);
+    clearTimeout(statusTimerRef.current);
+    setSaveStatus('saving');
+    todosTimerRef.current = setTimeout(() => {
+      onSaveRef.current({ todos: newTodos });
+      setSaveStatus('saved');
+      statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2500);
+    }, 800);
   }, []);
 
   const handleBlur = useCallback(() => {
@@ -217,13 +239,8 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
     URL.revokeObjectURL(url);
   }, [entry.title, entry.content, entryDate]);
 
-  // Prepare items for capsule selectors
-  const moodItems = MOOD_KEYS.map((key) => ({
-    key, ...MOODS[key],
-  }));
-  const weatherItems = WEATHER_KEYS.map((key) => ({
-    key, ...WEATHER[key],
-  }));
+  const moodItems = MOOD_KEYS.map((key) => ({ key, ...MOODS[key] }));
+  const weatherItems = WEATHER_KEYS.map((key) => ({ key, ...WEATHER[key] }));
 
   return (
     <div className="flex-1 flex flex-col h-screen overflow-hidden bg-surface">
@@ -263,7 +280,6 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
             >
               {format(entryDate, 'yyyy · M月d日 · EEEE')}
             </button>
-            {/* Hidden native datetime picker */}
             <input
               ref={dateInputRef}
               type="datetime-local"
@@ -278,14 +294,15 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
           <input
             value={title}
             onChange={handleTitleChange}
-            placeholder="今天想写点什么…"
+            placeholder={type === 'diary' ? '今天想写点什么…' : '备忘录标题…'}
             className="w-full text-3xl font-light text-zinc-200 placeholder:text-zinc-700
               outline-none bg-transparent leading-tight tracking-wide"
             style={{ fontFamily: 'var(--font-serif)' }}
           />
 
-          {/* Mood + Weather capsules — aligned to title's left edge */}
-          <div className="flex items-center gap-2.5 mt-6 mb-10">
+          {/* Type toggle + Mood + Weather capsules */}
+          <div className="flex items-center gap-2.5 mt-6 mb-8 flex-wrap">
+            <TypeToggle type={type} onChange={handleTypeChange} />
             <CapsuleSelector
               label="心情"
               items={moodItems}
@@ -300,14 +317,21 @@ export default function DiaryEditor({ entry, onSave, onBack }) {
             />
           </div>
 
-          {/* TipTap editor — fully uncontrolled */}
-          <TipTapEditor
-            content={entry.content}
-            onUpdate={handleContentUpdate}
-            onBlur={handleBlur}
-            placeholder="开始书写你的故事…"
-            autoFocus={!entry.title}
-          />
+          {/* Editor — morphs based on type */}
+          {type === 'diary' ? (
+            <TipTapEditor
+              content={entry.content}
+              onUpdate={handleContentUpdate}
+              onBlur={handleBlur}
+              placeholder="开始书写你的故事…"
+              autoFocus={!entry.title}
+            />
+          ) : (
+            <InlineChecklist
+              todos={todos}
+              onChange={handleTodosChange}
+            />
+          )}
         </div>
       </div>
     </div>

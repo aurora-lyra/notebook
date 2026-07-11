@@ -13,6 +13,7 @@ import {
   ChevronLeft,
 } from 'lucide-react';
 import TipTapEditor from './TipTapEditor';
+import InlineChecklist from './InlineChecklist';
 
 /**
  * Tag input component.
@@ -75,6 +76,7 @@ function TagInput({ tags, onChange }) {
 export default function EntryEditor({ entry, onSave, onClose }) {
   const [title, setTitle] = useState(entry.title);
   const [type, setType] = useState(entry.type);
+  const [todos, setTodos] = useState(entry.todos || []);
   const [tags, setTags] = useState(entry.tags);
   const [folder, setFolder] = useState(entry.folder);
   const [pinned, setPinned] = useState(entry.pinned);
@@ -100,6 +102,7 @@ export default function EntryEditor({ entry, onSave, onClose }) {
   useEffect(() => {
     setTitle(entry.title);
     setType(entry.type);
+    setTodos(entry.todos || []);
     setTags(entry.tags);
     setFolder(entry.folder);
     setPinned(entry.pinned);
@@ -116,6 +119,14 @@ export default function EntryEditor({ entry, onSave, onClose }) {
   const handleContentUpdate = useCallback(
     (json) => {
       onSave({ content: json });
+    },
+    [onSave],
+  );
+
+  const handleTodosChange = useCallback(
+    (newTodos) => {
+      setTodos(newTodos);
+      onSave({ todos: newTodos });
     },
     [onSave],
   );
@@ -238,13 +249,20 @@ export default function EntryEditor({ entry, onSave, onClose }) {
               style={{ letterSpacing: '-0.02em' }}
             />
 
-            {/* Editor */}
+            {/* Editor — morphs based on type */}
             <div className="mt-6">
-              <TipTapEditor
-                content={entry.content}
-                onUpdate={handleContentUpdate}
-                autoFocus={!entry.title}
-              />
+              {type === 'memo' ? (
+                <InlineChecklist
+                  todos={todos}
+                  onChange={handleTodosChange}
+                />
+              ) : (
+                <TipTapEditor
+                  content={entry.content}
+                  onUpdate={handleContentUpdate}
+                  autoFocus={!entry.title}
+                />
+              )}
             </div>
           </div>
         </div>

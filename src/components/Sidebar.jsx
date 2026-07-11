@@ -1,6 +1,7 @@
 import {
   BookOpen,
   FileText,
+  CheckSquare,
   Star,
   Pin,
   Tag,
@@ -19,7 +20,7 @@ import {
 const NAV_ITEMS = [
   { id: 'all', label: '全部', icon: FileText },
   { id: 'diary', label: '日记', icon: BookOpen },
-  { id: 'memo', label: '备忘录', icon: FileText },
+  { id: 'memo', label: '备忘录', icon: CheckSquare },
   { id: 'favorited', label: '收藏', icon: Star },
   { id: 'pinned', label: '置顶', icon: Pin },
 ];

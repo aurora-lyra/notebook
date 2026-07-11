@@ -12,7 +12,6 @@ export default function FAB({ onNewDiary, onNewTask }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
-  // Close on outside click (mouse + touch)
   useEffect(() => {
     if (!open) return;
     const handleClose = (e) => {

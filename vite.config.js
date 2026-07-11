@@ -9,7 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons.svg'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png', 'icons.svg'],
       manifest: {
         name: '极简日记本',
         short_name: 'Notebook',
