@@ -92,10 +92,15 @@ function DiaryEmpty({ onNew }) {
 /**
  * DiaryPage — full diary experience with list + editor.
  */
-export default function DiaryPage({ onLocalChange, syncVersion = 0 }) {
+export default function DiaryPage({ onLocalChange, onEditingChange, syncVersion = 0 }) {
   const [activeId, setActiveId] = useState(null);
   const [search, setSearch] = useState('');
   const fileInputRef = useRef(null);
+
+  // Notify parent when editing state changes
+  useEffect(() => {
+    onEditingChange?.(!!activeId);
+  }, [activeId, onEditingChange]);
 
   const { entries, create, update, remove, refresh } = useEntries({
     type: 'diary',

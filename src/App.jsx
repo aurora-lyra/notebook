@@ -65,6 +65,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeEntryId, setActiveEntryId] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isDiaryEditing, setIsDiaryEditing] = useState(false);
 
   // Close drawer when view changes
   useEffect(() => {
@@ -253,8 +254,8 @@ export default function App() {
   if (activeView === 'diary') {
     return (
       <div className="flex h-screen bg-surface">
-        {/* Desktop sidebar */}
-        <div className="hidden md:block">
+        {/* Desktop sidebar — collapses when editing for immersive mode */}
+        <div className={`hidden md:block immersive-sidebar ${isDiaryEditing ? 'collapsed' : ''}`}>
           <Sidebar {...sidebarProps} />
         </div>
 
@@ -265,15 +266,17 @@ export default function App() {
           {...sidebarProps}
         />
 
-        {/* Mobile header */}
+        {/* Mobile header — hidden during immersive editing */}
         <div className="flex-1 flex flex-col min-w-0">
-          <MobileHeader
-            activeView={activeView}
-            onMenuOpen={() => setDrawerOpen(true)}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-          />
-          <DiaryPage onLocalChange={onLocalChange} syncVersion={syncVersion} />
+          {!isDiaryEditing && (
+            <MobileHeader
+              activeView={activeView}
+              onMenuOpen={() => setDrawerOpen(true)}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+          )}
+          <DiaryPage onLocalChange={onLocalChange} onEditingChange={setIsDiaryEditing} syncVersion={syncVersion} />
         </div>
 
         <ChangePasswordModal
