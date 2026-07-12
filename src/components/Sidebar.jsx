@@ -152,20 +152,20 @@ export default function Sidebar({
       </nav>
 
       {/* Footer — sync status + user */}
-      <div className="border-t border-border px-3 py-2.5 shrink-0">
+      <div className="border-t border-border px-2 py-2.5 shrink-0">
         {/* Theme toggle */}
         {onToggleTheme && (
           <button
             onClick={onToggleTheme}
-            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm text-ink-secondary hover:bg-surface-hover transition-colors mb-1"
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-ink-secondary hover:bg-surface-hover transition-colors mb-1"
           >
-            {isDark ? <Sun size={15} className="shrink-0" /> : <Moon size={15} className="shrink-0" />}
+            {isDark ? <Sun size={13} className="shrink-0" /> : <Moon size={13} className="shrink-0" />}
             <span>{isDark ? '浅色模式' : '深色模式'}</span>
           </button>
         )}
 
         {/* Sync indicator */}
-        <div className="flex items-center gap-2 px-2 py-1 mb-1">
+        <div className="flex items-center gap-2 px-2.5 py-1 mb-1">
           {user ? (
             <>
               <Cloud size={13} className="text-success" />
@@ -181,10 +181,10 @@ export default function Sidebar({
 
         {/* User info + logout */}
         {user ? (
-          <div className="flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-surface-hover transition-colors">
+          <div className="flex items-center justify-between px-2.5 py-1.5 rounded-md hover:bg-surface-hover transition-colors">
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-6 h-6 rounded-full bg-accent-surface flex items-center justify-center shrink-0">
-                <User size={12} className="text-accent" />
+                <User size={13} className="text-accent" />
               </div>
               <span className="text-xs text-ink-secondary truncate">
                 {user.email}

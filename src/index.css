@@ -226,16 +226,15 @@ textarea:hover {
 
 /* ========================================
    Touch Targets — Minimum 44x44px (WCAG 2.5.5)
+   Applied to nav items and primary actions via .touch-target.
+   Icon-only buttons use natural sizing.
    ======================================== */
 
-button,
-[role="button"],
-a {
+.touch-target {
   min-height: 44px;
   min-width: 44px;
 }
 
-/* Exception: small icon buttons get padding instead */
 button svg,
 button img {
   flex-shrink: 0;

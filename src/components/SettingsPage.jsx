@@ -244,13 +244,13 @@ function SettingsTab({ user, isDark, onToggleTheme, onChangePassword, onExportAl
           </div>
           <button
             onClick={onToggleTheme}
-            className={`relative w-11 h-6 rounded-full transition-colors duration-300 ${
-              isDark ? 'bg-accent' : 'bg-border-strong'
-            }`}
+            className={`relative w-11 h-6 rounded-full transition-colors duration-300
+              focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface
+              ${isDark ? 'bg-accent' : 'bg-border-strong'}`}
           >
             <div
               className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-300 ${
-                isDark ? 'translate-x-5.5' : 'translate-x-0.5'
+                isDark ? 'translate-x-[22px]' : 'translate-x-0.5'
               }`}
             />
           </button>
@@ -308,7 +308,7 @@ function SettingsTab({ user, isDark, onToggleTheme, onChangePassword, onExportAl
           </p>
           <button
             onClick={onExportAll}
-            className="px-4 py-2 text-sm rounded-lg bg-ink text-surface hover:opacity-90 transition-opacity"
+            className="px-4 py-2 text-sm rounded-lg bg-accent text-white hover:opacity-90 transition-opacity"
           >
             导出全部日记
           </button>
@@ -432,11 +432,11 @@ function Section({ title, icon: Icon, children }) {
     <div>
       <div className="flex items-center gap-2 mb-2">
         <Icon size={14} className="text-ink-tertiary" />
-        <h3 className="text-xs font-medium text-ink-tertiary uppercase tracking-wider">
+        <h3 className="text-xs font-medium text-ink-tertiary tracking-wide">
           {title}
         </h3>
       </div>
-      <div className="rounded-xl border border-border px-4 py-1">{children}</div>
+      <div className="rounded-xl border border-border px-4 py-2">{children}</div>
     </div>
   );
 }
