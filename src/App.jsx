@@ -174,22 +174,38 @@ export default function App() {
 
   /** Batch upload all published entries to cloud. */
   const handleBatchUpload = useCallback(async () => {
-    await pushAll();
+    try {
+      await pushAll();
+    } catch (err) {
+      console.error('[App] Batch upload failed:', err);
+      throw err;
+    }
   }, []);
 
   /** Download selected entries from cloud. */
   const handleBatchDownload = useCallback(async (entries) => {
-    const ids = entries.map((e) => e.id);
-    await pullEntriesByIds(ids);
-    setSyncVersion((v) => v + 1);
+    try {
+      const ids = entries.map((e) => e.id);
+      await pullEntriesByIds(ids);
+      setSyncVersion((v) => v + 1);
+    } catch (err) {
+      console.error('[App] Batch download failed:', err);
+      throw err;
+    }
   }, []);
 
   /** Delete entries from cloud. */
   const handleDeleteRemote = useCallback(async (ids) => {
-    await deleteRemoteEntries(ids);
+    try {
+      await deleteRemoteEntries(ids);
+    } catch (err) {
+      console.error('[App] Delete remote failed:', err);
+      throw err;
+    }
   }, []);
 
   const handleChangePassword = useCallback(async (currentPassword, newPassword) => {
+    if (!user?.email) return { error: '未登录，无法修改密码' };
     // First verify current password by re-authenticating
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: user.email,

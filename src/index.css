@@ -914,6 +914,11 @@ button img {
   .checklist-controls {
     opacity: 1;
   }
+
+  /* EntryList actions — always visible on touch */
+  .entry-row-actions {
+    opacity: 1 !important;
+  }
 }
 
 .checklist-ghost-btn {
@@ -1105,4 +1110,39 @@ button img {
 
 [data-theme="light"] * {
   scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
+}
+
+/* ========================================
+   Reduced Motion — Respect user preferences
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========================================
+   Safe Area — iPhone notch & home indicator
+   ======================================== */
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right);
 }

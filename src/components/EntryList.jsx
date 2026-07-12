@@ -73,8 +73,8 @@ const EntryRow = memo(function EntryRow({
       <div className="flex items-center justify-between mt-2">
         <span className="text-xs text-ink-faint">{dateStr}</span>
 
-        {/* Actions (show on hover) */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Actions (show on hover, always visible on touch) */}
+        <div className="entry-row-actions flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             title={entry.favorited ? '取消收藏' : '收藏'}
             onClick={(e) => {

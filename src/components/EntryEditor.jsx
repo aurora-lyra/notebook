@@ -87,6 +87,11 @@ export default function EntryEditor({ entry, onSave, onClose }) {
 
   const saveTimerRef = useRef(null);
 
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => clearTimeout(saveTimerRef.current);
+  }, []);
+
   // Debounced auto-save for metadata fields
   const scheduleSave = useCallback(
     (patch) => {
@@ -118,9 +123,9 @@ export default function EntryEditor({ entry, onSave, onClose }) {
 
   const handleContentUpdate = useCallback(
     (json) => {
-      onSave({ content: json });
+      scheduleSave({ content: json });
     },
-    [onSave],
+    [scheduleSave],
   );
 
   const handleTodosChange = useCallback(
