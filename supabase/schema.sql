@@ -12,6 +12,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 --   ALTER TABLE entries ADD COLUMN IF NOT EXISTS mode TEXT DEFAULT 'text';
 --   ALTER TABLE entries ADD COLUMN IF NOT EXISTS todos JSONB DEFAULT '[]';
 --   ALTER TABLE entries ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'draft';
+--   ALTER TABLE entries ADD COLUMN IF NOT EXISTS mood TEXT;
+--   ALTER TABLE entries ADD COLUMN IF NOT EXISTS weather TEXT;
 -- ============================================
 CREATE TABLE IF NOT EXISTS entries (
   id          TEXT PRIMARY KEY,              -- 客户端生成的 ID (Date.now base36 + random)
@@ -22,6 +24,8 @@ CREATE TABLE IF NOT EXISTS entries (
   mode        TEXT NOT NULL DEFAULT 'text' CHECK (mode IN ('text', 'checklist')),
   todos       JSONB DEFAULT '[]',            -- 清单模式待办数据（嵌入式）
   status      TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+  mood        TEXT,                          -- 心情标签
+  weather     TEXT,                          -- 天气标签
   tags        TEXT[] DEFAULT '{}',
   folder      TEXT DEFAULT '',
   pinned      BOOLEAN DEFAULT false,
