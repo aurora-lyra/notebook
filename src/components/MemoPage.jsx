@@ -157,17 +157,17 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
       todos: [],
     });
     setActiveId(entry.id);
-    // No onLocalChange — new entries are local-only drafts
-  }, [create]);
+    onLocalChange?.();
+  }, [create, onLocalChange]);
 
   const handleTodosChange = useCallback(
     (newTodos) => {
       if (activeId) {
         update(activeId, { todos: newTodos });
-        // Local-only — no onLocalChange
+        onLocalChange?.();
       }
     },
-    [activeId, update],
+    [activeId, update, onLocalChange],
   );
 
   const titleRef = useRef('');
@@ -177,19 +177,19 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
       titleRef.current = e.target.value;
       if (activeId) {
         update(activeId, { title: e.target.value });
-        // Local-only — no onLocalChange
+        onLocalChange?.();
       }
     },
-    [activeId, update],
+    [activeId, update, onLocalChange],
   );
 
   const handleTitleBlur = useCallback(() => {
     // Flush title on blur — ensures save even if onChange was missed
     if (activeId && titleRef.current) {
       update(activeId, { title: titleRef.current });
-      // Local-only — no onLocalChange
+      onLocalChange?.();
     }
-  }, [activeId, update]);
+  }, [activeId, update, onLocalChange]);
 
   /** Publish — sync to cloud. */
   const handlePublish = useCallback(() => {

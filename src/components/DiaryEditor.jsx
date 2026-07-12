@@ -128,6 +128,7 @@ export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
   const isDraft = (entry.status || 'draft') === 'draft';
 
   const statusTimerRef = useRef(null);
+  const syncTimerRef = useRef(null);
   const lastSavedContentRef = useRef(null);
   const onSaveRef = useRef(onSave);
   const onPublishRef = useRef(onPublish);
@@ -147,6 +148,7 @@ export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
   useEffect(() => {
     return () => {
       clearTimeout(statusTimerRef.current);
+      clearTimeout(syncTimerRef.current);
     };
   }, []);
 
@@ -157,11 +159,20 @@ export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
     statusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2000);
   }, []);
 
-  /** Instant local save — no cloud sync. */
+  /** Debounced sync to cloud (writes to notebook_entries + triggers push). */
+  const scheduleSync = useCallback((patch) => {
+    clearTimeout(syncTimerRef.current);
+    syncTimerRef.current = setTimeout(() => {
+      onSaveRef.current({ ...patch, status: 'draft' });
+    }, 2000);
+  }, []);
+
+  /** Instant local save + debounced cloud sync. */
   const handleFieldChange = useCallback((field, value) => {
     saveDraftLocal(entryIdRef.current, { [field]: value });
     flashStatus('saved');
-  }, [flashStatus]);
+    scheduleSync({ [field]: value });
+  }, [flashStatus, scheduleSync]);
 
   const handleTitleChange = (e) => {
     setTitle(e.target.value);
@@ -172,13 +183,15 @@ export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
     setMood(newMood);
     saveDraftLocal(entryIdRef.current, { mood: newMood });
     flashStatus('saved');
-  }, [flashStatus]);
+    scheduleSync({ mood: newMood });
+  }, [flashStatus, scheduleSync]);
 
   const handleWeatherChange = useCallback((newWeather) => {
     setWeather(newWeather);
     saveDraftLocal(entryIdRef.current, { weather: newWeather });
     flashStatus('saved');
-  }, [flashStatus]);
+    scheduleSync({ weather: newWeather });
+  }, [flashStatus, scheduleSync]);
 
   const handleDateChange = useCallback((e) => {
     const val = e.target.value;
@@ -187,7 +200,8 @@ export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
     setCreatedAt(newDate);
     saveDraftLocal(entryIdRef.current, { createdAt: newDate });
     flashStatus('saved');
-  }, [flashStatus]);
+    scheduleSync({ createdAt: newDate });
+  }, [flashStatus, scheduleSync]);
 
   const handleDateClick = useCallback(() => {
     if (dateInputRef.current) {
@@ -202,19 +216,22 @@ export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
     lastSavedContentRef.current = jsonStr;
     saveDraftLocal(entryIdRef.current, { content: json });
     flashStatus('saved');
-  }, [flashStatus]);
+    scheduleSync({ content: json });
+  }, [flashStatus, scheduleSync]);
 
   const handleTypeChange = useCallback((newType) => {
     setType(newType);
     saveDraftLocal(entryIdRef.current, { type: newType });
     flashStatus('saved');
-  }, [flashStatus]);
+    scheduleSync({ type: newType });
+  }, [flashStatus, scheduleSync]);
 
   const handleTodosChange = useCallback((newTodos) => {
     setTodos(newTodos);
     saveDraftLocal(entryIdRef.current, { todos: newTodos });
     flashStatus('saved');
-  }, [flashStatus]);
+    scheduleSync({ todos: newTodos });
+  }, [flashStatus, scheduleSync]);
 
   const handleBlur = useCallback(() => {
     // No-op — all saves are already local-only
