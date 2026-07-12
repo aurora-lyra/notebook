@@ -26,30 +26,37 @@ src/
 ├── components/
 │   ├── TipTapEditor.jsx   # TipTap 编辑器（浮动菜单 + 气泡菜单）
 │   ├── Sidebar.jsx        # 左侧导航栏（含用户信息 + 云端状态）
-│   ├── EntryList.jsx      # 条目列表（memo 化 EntryRow）
-│   ├── EntryEditor.jsx    # 通用条目编辑视图
-│   ├── DiaryEditor.jsx    # 日记专用编辑器（沉浸式衬线排版 + 自动保存状态栏）
-│   ├── DiaryPage.jsx      # 日记模块页面（列表 + 编辑整合）
-│   ├── TodoItem.jsx       # 单个待办事项（优先级莫兰迪色圆点）
-│   ├── TodoList.jsx       # 待办列表（分类：今天/以后/已完成）
-│   ├── MemoPage.jsx       # 备忘录模块页面（集成提醒系统）
-│   ├── AuthScreen.jsx     # 登录/注册页面（含连接错误处理）
-│   ├── EmptyState.jsx     # 空状态
+│   ├── MobileDrawer.jsx   # 移动端抽屉导航
+│   ├── DiaryEditor.jsx    # 日记编辑器（沉浸式衬线排版 + 草稿保存）
+│   ├── DiaryPage.jsx      # 日记模块页面（列表 + 编辑 + 批量管理）
+│   ├── MemoPage.jsx       # 备忘录模块页面（清单 + 提醒 + 批量管理）
+│   ├── DraftsPage.jsx     # 草稿箱页面（新建草稿 + 已发布修改 + 批量管理）
+│   ├── InlineChecklist.jsx # 内联待办清单组件
+│   ├── SwipeableRow.jsx   # 滑动操作行（置顶/删除/收藏）
+│   ├── BatchActionBar.jsx # 批量操作浮动栏
+│   ├── CloudEntriesModal.jsx # 云端日记管理弹窗
+│   ├── SettingsPage.jsx   # 设置与统计中心
+│   ├── YearInPixels.jsx   # 心情像素网格
+│   ├── AuthScreen.jsx     # 登录/注册页面
+│   ├── ChangePasswordModal.jsx # 修改密码弹窗
+│   └── EmptyState.jsx     # 空状态
 ├── hooks/
-│   ├── useEntries.js      # 数据操作 hooks（乐观更新 + syncVersion）
-│   ├── useAuth.js         # Supabase Auth 认证 hook（含超时降级）
+│   ├── useEntries.js      # 数据操作 hooks（乐观更新 + 批量删除）
+│   ├── useAuth.js         # Supabase Auth 认证 hook
 │   ├── useSync.js         # 同步引擎 hook（生命周期管理）
-│   └── useReminders.js    # 提醒轮询 hook（30秒检查一次）
+│   ├── useTheme.js        # 主题切换 hook
+│   └── useReminders.js    # 提醒轮询 hook
 ├── lib/
-│   ├── supabase.js        # Supabase 客户端配置（含连接诊断）
-│   ├── syncEngine.js      # 同步引擎（推送/拉取/合并/Realtime）
-│   ├── db.js              # localStorage CRUD（内存缓存 + 异步 flush）
-│   ├── todoStore.js       # 待办事项数据层
-│   └── notifier.js        # 通知系统（Notification API + 网页气泡）
+│   ├── supabase.js        # Supabase 客户端配置
+│   ├── syncEngine.js      # 同步引擎（推送/拉取/合并/Realtime/云端管理）
+│   ├── db.js              # localStorage CRUD（内存缓存 + 草稿存储）
+│   ├── markdown.js        # Markdown 序列化/反序列化
+│   ├── moods.js           # 心情/天气数据
+│   └── notifier.js        # 通知系统
 ├── supabase/
 │   └── schema.sql         # 建表 SQL + RLS 策略 + Realtime
-├── index.css              # Tailwind + 设计系统 tokens + 日记排版样式
-├── App.jsx                # 主布局（认证门控 + 三模式路由 + 同步集成）
+├── index.css              # Tailwind + 设计系统 tokens + 组件样式
+├── App.jsx                # 主布局（认证门控 + 路由 + 同步集成）
 └── main.jsx               # 入口
 ```
 
@@ -69,16 +76,47 @@ src/
 - 正文使用衬线体（Georgia / Noto Serif SC），17px，line-height: 2.0
 - 编辑区最大宽度 700px，水平居中
 - 标题用无衬线体，形成视觉层次对比
-- 图片自动添加圆角（8px）+ 柔和阴影，hover 加深
-- 状态栏显示自动保存状态（正在保存… / 已保存到本地）
+- 图片自动添加圆角（8px）+ 柔和阴影
 
 ### 备忘录模块
 
-- 待办事项分三类：今天 / 以后 / 已完成
-- 优先级用莫兰迪色圆点，点击循环切换
+- 待办事项使用 InlineChecklist 组件
+- 底部「添加待办」按钮手动添加条目
 - 支持设置截止时间，过期任务红色高亮
-- 通知系统：浏览器 Notification API + 网页气泡降级
 - 提醒轮询：每 30 秒检查一次到期任务
+
+## 草稿 ↔ 发布系统
+
+### 核心规则
+
+- **草稿箱 = 纯本地**，永远不碰云端
+- **发布 = 同步到云端**，其他设备可见
+- 编辑已发布条目 → 修改先存草稿 → 发布后覆盖原条目
+
+### 存储层
+
+- `notebook_entries` — 主存储，syncEngine 读写
+- `draft_entry_{id}` — 临时草稿缓存，DiaryEditor 即时写入
+
+### 保存流程
+
+```
+用户编辑
+  → 0ms: saveDraftLocal() 写入 draft_entry_{id}（即时响应）
+  → 1s: schedulePersist() 写入 notebook_entries（持久化）
+  → 不触发 onLocalChange（不推云端）
+
+用户点击发布
+  → onSave({ status: 'published' }) 写入 notebook_entries
+  → onLocalChange() → schedulePush() → pushEntries() → Supabase
+  → clearDraftLocal() 清除临时缓存
+```
+
+### 批量管理
+
+- 所有列表视图（日记/备忘录/草稿箱）支持「管理」按钮 + 长按进入选择模式
+- BatchActionBar 浮动操作栏：全选/取消/删除
+- 草稿箱批量删除区分纯草稿和已修改条目
 
 ## 数据模型
 
@@ -90,6 +128,9 @@ src/
   title: string,
   content: TipTapJSON,
   type: 'diary' | 'memo',
+  status: 'draft' | 'published',
+  mood: string | null,
+  weather: string | null,
   tags: string[],
   folder: string,
   pinned: boolean,
@@ -118,12 +159,6 @@ src/
 }
 ```
 
-## 编辑器交互
-
-- **浮动菜单**: 空段落时出现，支持标题/引用/列表/图片
-- **气泡菜单**: 选中文字时出现，支持加粗/斜体/下划线/标题/引用/分割线
-- **自动保存**: 内容变化 300ms 防抖后导出 JSON
-
 ## Supabase 集成
 
 ### 1. 建表
@@ -139,52 +174,73 @@ VITE_SUPABASE_URL=https://<project>.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJxxx...
 ```
 
-注意：URL 不要带 `/rest/v1` 后缀。
-
 ### 3. 同步架构
 
 ```
-┌─────────────┐   800ms防抖   ┌──────────────┐   Realtime    ┌─────────────┐
+┌─────────────┐   发布时推送   ┌──────────────┐   Realtime    ┌─────────────┐
 │  localStorage │ ──────────▶ │  Supabase DB  │ ───────────▶ │  其他设备     │
-│  (本地优先)   │ ◀── merge ── │  (云端真相)    │              │  (自动拉取)   │
+│  (草稿纯本地) │ ◀── merge ── │  (已发布条目)  │              │  (刷新后可见) │
 └─────────────┘              └──────────────┘              └─────────────┘
 ```
 
+**同步规则**:
+
+- 草稿（status='draft'）**永不推送到云端**
+- 只有已发布条目（status='published'）才同步
+- 发布时 → `onLocalChange()` → `schedulePush()` → `pushEntries()`
+- 切换标签页 → `fullSync()` 全量 push + pull
+
 **冲突解决**: last-write-wins（`updated_at` 较新者胜），`version` 作 tiebreaker。
 
-**同步时机**:
-- 本地写入 → 800ms 防抖后推送
-- Realtime 订阅 → 远程变更毫秒级拉取
-- 页面获得焦点 → 全量 push + pull（兜底）
-- 登录时 → 全量拉取 + 推送本地未同步数据
+### 4. 云端管理
 
-### 4. 认证流程
+设置页提供:
+
+- **批量上传到云端** — 推送所有已发布条目
+- **管理云端日记** — 弹窗选择性下载/删除云端条目
+
+### 5. 认证流程
 
 - 未配置 Supabase → 直接进入本地模式
 - 已配置 + 未登录 → 登录页（10 秒超时降级，可跳过）
-- 已登录 → 自动同步
+- 已登录 → 手动同步
 
 ## 性能优化
 
 ### 数据层缓存
 
-`db.js` 使用内存缓存，所有读操作走缓存，写操作通过 `requestIdleCallback` 异步 flush 到 localStorage。`deleteEntry` 返回已解析数组，调用方无需二次解析。
+`db.js` 使用内存缓存，所有读操作走缓存，写操作同步 flush 到 localStorage。
 
 ### 乐观更新
 
-`useEntries` 的 create/update/remove 做乐观更新：直接操作当前数组（增量修改），不触发全量重排序。
+`useEntries` 的 create/update/remove 做乐观更新：直接操作当前数组，不触发全量重排序。
 
 ### 组件 memo
 
-`EntryRow` 和 `DiaryItem` 用 `React.memo` 包裹，只有自身数据变化时才重渲染。
+`EntryRow`、`DiaryItem`、`MemoItem`、`DraftItem` 用 `React.memo` 包裹。
 
-### 删除操作链路（优化后）
+### 批量删除
+
+`batchRemove(ids)` — 批量删除条目，每个 ID 走 `queueDeletion` 流程。
+
+## UI 规范
+
+### Sidebar footer 三元素统一样式
 
 ```text
-点击删除 → db.deleteEntry (内存 splice, 0 次 parse)
-         → applyFilter (内存过滤)
-         → React setEntries (仅删除行消失，其他 memo 跳过)
+px-2.5 py-1.5 gap-2 rounded-md text-xs text-ink-secondary mb-1
 ```
+
+### ChecklistRow 对齐
+
+- `align-items: center` 自动居中
+- 字号 `var(--font-size-sm)` (13px)
+- 无手动 `margin-top` hack
+
+### 按钮尺寸
+
+- 不使用全局 `min-height: 44px`
+- 使用 `.touch-target` 类按需添加
 
 ## 后续计划
 
@@ -202,3 +258,8 @@ VITE_SUPABASE_ANON_KEY=eyJxxx...
 - [x] 沉浸式写作模式（编辑时侧边栏自动淡出）
 - [x] 心情+天气胶囊选择器
 - [x] 修改密码功能
+- [x] 草稿 ↔ 发布系统（纯本地草稿 + 手动发布）
+- [x] 批量管理（所有视图支持选择模式 + 批量删除）
+- [x] 云端管理（选择性下载/删除云端条目）
+- [x] 滑动操作（SwipeableRow 置顶/删除/收藏）
+- [x] InlineChecklist 底部添加待办按钮
