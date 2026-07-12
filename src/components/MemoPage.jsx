@@ -7,6 +7,7 @@ import SwipeableRow from './SwipeableRow';
 import BatchActionBar from './BatchActionBar';
 import { useEntries } from '../hooks/useEntries';
 import { useReminders } from '../hooks/useReminders';
+import * as db from '../lib/db';
 
 /**
  * Single memo item in the list — memoized.
@@ -135,10 +136,11 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
     search,
   }, syncVersion);
 
-  const activeEntry = useMemo(
-    () => (activeId ? entries.find((e) => e.id === activeId) || null : null),
-    [entries, activeId],
-  );
+  // Check published list first, then localStorage for drafts
+  const activeEntry = useMemo(() => {
+    if (!activeId) return null;
+    return entries.find((e) => e.id === activeId) || db.getEntry(activeId) || null;
+  }, [entries, activeId]);
 
   const handleNew = useCallback(() => {
     const entry = create({

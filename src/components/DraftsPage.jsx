@@ -98,12 +98,9 @@ export default function DraftsPage({ onLocalChange, onPublish, onEditingChange, 
   // Modified published entries — merge draft data with published entry
   const modifiedEntries = useMemo(() => {
     return publishedEntries
-      .filter((entry) => {
-        const draft = readDraftLocal(entry.id);
-        return !!draft;
-      })
       .map((entry) => {
         const draft = readDraftLocal(entry.id);
+        if (!draft) return null;
         return {
           ...entry,
           ...draft,
@@ -111,6 +108,7 @@ export default function DraftsPage({ onLocalChange, onPublish, onEditingChange, 
           _originalId: entry.id,
         };
       })
+      .filter(Boolean)
       .filter((entry) => {
         if (!search) return true;
         const q = search.toLowerCase();

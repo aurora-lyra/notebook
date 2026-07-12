@@ -7,6 +7,7 @@ import SwipeableRow from './SwipeableRow';
 import BatchActionBar from './BatchActionBar';
 import { useEntries } from '../hooks/useEntries';
 import { parse } from '../lib/markdown';
+import * as db from '../lib/db';
 
 /**
  * Single diary item in the list — memoized to avoid unnecessary re-renders.
@@ -152,11 +153,11 @@ export default function DiaryPage({ onLocalChange, onEditingChange, syncVersion 
     search,
   }, syncVersion);
 
-  // Derive active entry from the single entries source — no separate useEntry.
-  const activeEntry = useMemo(
-    () => (activeId ? entries.find((e) => e.id === activeId) || null : null),
-    [entries, activeId],
-  );
+  // Derive active entry — check published list first, then localStorage for drafts
+  const activeEntry = useMemo(() => {
+    if (!activeId) return null;
+    return entries.find((e) => e.id === activeId) || db.getEntry(activeId) || null;
+  }, [entries, activeId]);
 
   const handleNew = useCallback(() => {
     const entry = create({ type: 'diary' });
