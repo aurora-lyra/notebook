@@ -41,10 +41,10 @@ export function useEntries(filter = {}, syncVersion = 0) {
     setEntries(db.listEntries(filterRef.current));
   }, []);
 
-  // Re-read when syncVersion changes (remote data arrived)
+  // Re-read when syncVersion changes (remote data arrived) or filter changes
   useEffect(() => {
     refresh();
-  }, [syncVersion, refresh]);
+  }, [syncVersion, refresh, filter.search, filter.type, filter.status, filter.folder, filter.tag]);
 
   const create = useCallback(
     (overrides) => {
