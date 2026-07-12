@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Pin, Trash2, Star } from 'lucide-react';
 
@@ -28,8 +28,14 @@ export default function SwipeableRow({
   isFavorited = false,
 }) {
   const rowRef = useRef(null);
+  const timerRef = useRef(null);
   const [isCollapsing, setIsCollapsing] = useState(false);
   const x = useMotionValue(0);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => clearTimeout(timerRef.current);
+  }, []);
 
   // Map drag offset to button opacity (reveal as you drag)
   const leftBtnOpacity = useTransform(x, [-LEFT_W, -BUTTON_W, 0], [1, 1, 0]);
@@ -50,7 +56,8 @@ export default function SwipeableRow({
       if (dx < -rowW * DELETE_RATIO || velocity < -800) {
         setIsCollapsing(true);
         animate(x, -rowW, { type: 'spring', stiffness: 300, damping: 30 });
-        setTimeout(() => onDelete?.(), 350);
+        clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => onDelete?.(), 350);
         return;
       }
 
@@ -71,14 +78,15 @@ export default function SwipeableRow({
 
   const handleAction = useCallback(
     (action, shouldCollapse = false) => {
+      clearTimeout(timerRef.current);
       if (shouldCollapse) {
         setIsCollapsing(true);
         const rowW = rowRef.current?.offsetWidth || 300;
         animate(x, -rowW, { type: 'spring', stiffness: 300, damping: 30 });
-        setTimeout(() => action?.(), 350);
+        timerRef.current = setTimeout(() => action?.(), 350);
       } else {
         animate(x, 0, { type: 'spring', stiffness: 400, damping: 30 });
-        setTimeout(() => action?.(), 80);
+        timerRef.current = setTimeout(() => action?.(), 80);
       }
     },
     [x],

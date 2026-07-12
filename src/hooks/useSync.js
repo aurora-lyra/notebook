@@ -15,6 +15,13 @@ import {
  */
 export function useSync(user, onRemoteChange) {
   const initialized = useRef(false);
+  const onRemoteChangeRef = useRef(onRemoteChange);
+  const cancelRef = useRef(false);
+
+  // Keep callback ref fresh
+  useEffect(() => {
+    onRemoteChangeRef.current = onRemoteChange;
+  }, [onRemoteChange]);
 
   // Init sync on login, teardown on logout
   useEffect(() => {
@@ -26,6 +33,7 @@ export function useSync(user, onRemoteChange) {
 
     if (initialized.current) return;
     initialized.current = true;
+    cancelRef.current = false;
 
     (async () => {
       try {
@@ -33,12 +41,18 @@ export function useSync(user, onRemoteChange) {
       } catch (err) {
         console.error('[Sync] Init failed:', err);
       }
+      // Guard: user may have changed during async init
+      if (cancelRef.current) return;
       // Always subscribe realtime, even if initSync failed
       subscribeRealtime(user.id, (table) => {
-        onRemoteChange?.(table);
+        onRemoteChangeRef.current?.(table);
       });
     })();
-  }, [user, onRemoteChange]);
+
+    return () => {
+      cancelRef.current = true;
+    };
+  }, [user]);
 
   // Full sync on tab focus (fallback for Realtime gaps)
   useEffect(() => {
@@ -47,14 +61,16 @@ export function useSync(user, onRemoteChange) {
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
         fullSync().then(() => {
-          onRemoteChange?.('all');
+          onRemoteChangeRef.current?.('all');
+        }).catch((err) => {
+          console.error('[Sync] Full sync failed:', err);
         });
       }
     };
 
     window.addEventListener('visibilitychange', handleVisibility);
     return () => window.removeEventListener('visibilitychange', handleVisibility);
-  }, [user, onRemoteChange]);
+  }, [user]);
 
   // Call this after every local write to schedule a cloud push
   const onLocalChange = useCallback(() => {

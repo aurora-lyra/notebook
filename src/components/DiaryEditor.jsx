@@ -163,7 +163,7 @@ export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
   const schedulePersist = useCallback((patch) => {
     clearTimeout(persistTimerRef.current);
     persistTimerRef.current = setTimeout(() => {
-      onSaveRef.current({ ...patch, status: 'draft' });
+      onSaveRef.current(patch);
     }, 1000);
   }, []);
 
@@ -243,6 +243,7 @@ export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
    */
   const handlePublish = useCallback(() => {
     clearTimeout(statusTimerRef.current);
+    clearTimeout(persistTimerRef.current);
     setSaveStatus('publishing');
     // Read draft data from localStorage and merge with current state
     const draft = readDraftLocal(entryIdRef.current) || {};

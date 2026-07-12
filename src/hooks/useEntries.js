@@ -87,6 +87,7 @@ export function useEntries(filter = {}, syncVersion = 0) {
       // Optimistic: remove from UI immediately via prev.filter
       // db.deleteEntry mutates the cache + flushes to localStorage (side effect)
       db.deleteEntry(id);
+      db.clearDraftLocal(id);
       setEntries((prev) => prev.filter((e) => e.id !== id));
       // Register for cloud deletion (will be picked up by next sync push)
       queueDeletion(id);
@@ -117,6 +118,7 @@ export function useEntries(filter = {}, syncVersion = 0) {
         const entry = db.getEntry(id);
         if (entry) {
           db.deleteEntry(id);
+          db.clearDraftLocal(id);
           queueDeletion(id);
           deleted.push(entry);
         }

@@ -300,10 +300,10 @@ function SettingsTab({ user, isDark, onToggleTheme, onChangePassword, onExportAl
                     <span>{uploading ? '上传中…' : '批量上传到云端'}</span>
                   </button>
                   {uploadResult === 'success' && (
-                    <p className="text-xs text-green-400 mt-2">上传完成</p>
+                    <p className="text-xs text-success mt-2">上传完成</p>
                   )}
                   {uploadResult === 'error' && (
-                    <p className="text-xs text-red-400 mt-2">上传失败，请重试</p>
+                    <p className="text-xs text-danger mt-2">上传失败，请重试</p>
                   )}
                 </div>
               )}
