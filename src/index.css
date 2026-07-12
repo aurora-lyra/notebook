@@ -825,7 +825,7 @@ button img {
 .checklist-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   padding: 6px 4px;
   border-radius: var(--radius-md);
   transition: background var(--duration-fast) var(--ease-out);
