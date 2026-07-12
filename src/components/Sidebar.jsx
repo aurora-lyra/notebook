@@ -157,7 +157,7 @@ export default function Sidebar({
         {onToggleTheme && (
           <button
             onClick={onToggleTheme}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-ink-secondary hover:bg-surface-hover transition-colors mb-1"
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-ink-secondary hover:bg-surface-hover transition-colors mb-1"
           >
             {isDark ? <Sun size={13} className="shrink-0" /> : <Moon size={13} className="shrink-0" />}
             <span>{isDark ? '浅色模式' : '深色模式'}</span>
@@ -165,23 +165,23 @@ export default function Sidebar({
         )}
 
         {/* Sync indicator */}
-        <div className="flex items-center gap-2 px-2.5 py-1 mb-1">
+        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-ink-secondary hover:bg-surface-hover transition-colors mb-1">
           {user ? (
             <>
               <Cloud size={13} className="text-success" />
-              <span className="text-xs text-ink-tertiary">已同步云端</span>
+              <span>已同步云端</span>
             </>
           ) : (
             <>
               <CloudOff size={13} className="text-ink-faint" />
-              <span className="text-xs text-ink-faint">仅本地存储</span>
+              <span className="text-ink-faint">仅本地存储</span>
             </>
           )}
         </div>
 
         {/* User info + logout */}
         {user ? (
-          <div className="flex items-center justify-between px-2.5 py-1.5 rounded-md hover:bg-surface-hover transition-colors">
+          <div className="flex items-center justify-between px-2.5 py-1.5 rounded-md hover:bg-surface-hover transition-colors mb-1">
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-6 h-6 rounded-full bg-accent-surface flex items-center justify-center shrink-0">
                 <User size={13} className="text-accent" />

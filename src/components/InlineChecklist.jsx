@@ -298,50 +298,53 @@ export default function InlineChecklist({ todos = [], onChange }) {
     [], // stable — uses ref for onChange
   );
 
+  // Use functional setLocalTodos updater to avoid stale closure race.
+  // When Enter triggers onUpdate + onAddAfter in the same tick,
+  // the second call reads the latest pending state from the first.
+
   const handleUpdate = useCallback(
     (id, patch) => {
-      emit(localTodos.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+      setLocalTodos((prev) => {
+        const updated = prev.map((t) => (t.id === id ? { ...t, ...patch } : t));
+        onChangeRef.current?.(updated);
+        return updated;
+      });
     },
-    [localTodos, emit],
+    [],
   );
 
   const handleDelete = useCallback(
     (id) => {
-      const filtered = localTodos.filter((t) => t.id !== id);
-      if (filtered.length === 0) {
-        emit([
-          {
-            id: uid(),
-            text: '',
-            done: false,
-            priority: 'medium',
-            dueAt: null,
-            remindedAt: null,
-          },
-        ]);
-      } else {
-        emit(filtered);
-      }
+      setLocalTodos((prev) => {
+        const filtered = prev.filter((t) => t.id !== id);
+        if (filtered.length === 0) {
+          const fallback = [{
+            id: uid(), text: '', done: false, priority: 'medium', dueAt: null, remindedAt: null,
+          }];
+          onChangeRef.current?.(fallback);
+          return fallback;
+        }
+        onChangeRef.current?.(filtered);
+        return filtered;
+      });
     },
-    [localTodos, emit],
+    [],
   );
 
   const handleAddAfter = useCallback(
     (afterId) => {
-      const idx = localTodos.findIndex((t) => t.id === afterId);
-      const newTodo = {
-        id: uid(),
-        text: '',
-        done: false,
-        priority: 'medium',
-        dueAt: null,
-        remindedAt: null,
-      };
-      const updated = [...localTodos];
-      updated.splice(idx + 1, 0, newTodo);
-      emit(updated);
+      setLocalTodos((prev) => {
+        const idx = prev.findIndex((t) => t.id === afterId);
+        const newTodo = {
+          id: uid(), text: '', done: false, priority: 'medium', dueAt: null, remindedAt: null,
+        };
+        const updated = [...prev];
+        updated.splice(idx + 1, 0, newTodo);
+        onChangeRef.current?.(updated);
+        return updated;
+      });
     },
-    [localTodos, emit],
+    [],
   );
 
   const displayTodos =
