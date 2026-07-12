@@ -190,7 +190,7 @@ export default function CloudEntriesModal({ open, onClose, onDownload, onDelete,
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-ink-faint mt-0.5">
+                          <p className="text-xs text-ink-faint mt-1">
                             {format(date, 'M月d日 HH:mm')} · {entry.type === 'diary' ? '日记' : '备忘录'}
                             {entry.status === 'draft' && ' · 草稿'}
                           </p>
@@ -204,7 +204,7 @@ export default function CloudEntriesModal({ open, onClose, onDownload, onDelete,
 
             {/* Footer */}
             {entries.length > 0 && (
-              <div className="border-t border-border px-5 py-3 shrink-0">
+              <div className="border-t border-border px-5 py-4 shrink-0">
                 {/* Selection info */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">

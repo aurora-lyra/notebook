@@ -282,7 +282,7 @@ function SettingsTab({ user, isDark, onToggleTheme, onChangePassword, onExportAl
               {/* Upload */}
               {onBatchUpload && (
                 <div>
-                  <p className="text-xs text-ink-tertiary mb-2">
+                  <p className="text-xs text-ink-tertiary mb-3">
                     将所有已发布条目同步到云端
                   </p>
                   <button
@@ -310,7 +310,7 @@ function SettingsTab({ user, isDark, onToggleTheme, onChangePassword, onExportAl
 
               {/* Cloud management */}
               <div>
-                <p className="text-xs text-ink-tertiary mb-2">
+                <p className="text-xs text-ink-tertiary mb-3">
                   从云端读取或管理云端日记
                 </p>
                 <button
@@ -356,7 +356,7 @@ function SettingsTab({ user, isDark, onToggleTheme, onChangePassword, onExportAl
 
 function StatsTab({ stats }) {
   return (
-    <div className="max-w-lg mx-auto px-6 py-8 space-y-8">
+    <div className="max-w-lg mx-auto px-6 py-8 space-y-6">
       {/* Overview cards */}
       <div className="grid grid-cols-3 gap-3">
         <div className="stat-card text-center">
@@ -466,13 +466,13 @@ function StatsTab({ stats }) {
 function Section({ title, icon: Icon, children }) {
   return (
     <div>
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-2 mb-2.5">
         <Icon size={14} className="text-ink-tertiary" />
         <h3 className="text-xs font-medium text-ink-tertiary tracking-wide">
           {title}
         </h3>
       </div>
-      <div className="rounded-xl border border-border px-4 py-2">{children}</div>
+      <div className="rounded-xl border border-border px-4 py-3">{children}</div>
     </div>
   );
 }

@@ -94,7 +94,7 @@ const DraftItem = memo(function DraftItem({ entry, isActive, onSelect, isModifie
           </span>
         )}
       </div>
-      <h3 className="text-sm font-medium text-ink leading-snug line-clamp-1 mb-1">
+      <h3 className="text-sm font-medium text-ink leading-snug line-clamp-1 mb-1.5">
         {entry.title || '无标题草稿'}
       </h3>
       <p className="text-xs text-ink-tertiary leading-relaxed line-clamp-2">

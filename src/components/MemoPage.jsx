@@ -80,7 +80,7 @@ const MemoItem = memo(function MemoItem({ entry, isActive, onSelect, selectMode,
       </p>
 
       {/* Title */}
-      <h3 className="text-sm font-medium text-ink leading-snug line-clamp-1 mb-1">
+      <h3 className="text-sm font-medium text-ink leading-snug line-clamp-1 mb-1.5">
         {entry.title || '无标题'}
       </h3>
 
