@@ -291,22 +291,23 @@ export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
 
   return (
     <div className="flex-1 flex flex-col h-screen overflow-hidden bg-surface">
-      {/* Minimal floating header */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-3">
+      {/* Minimal floating header with safe-area */}
+      <div className="absolute top-0 left-0 right-0 z-20 safe-area-header
+        flex items-center justify-between px-6 py-3">
         <button
           onClick={onBack}
           className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-300
-            transition-colors px-3 py-1.5 rounded-full hover:bg-white/[0.04]"
+            transition-colors px-3 py-2.5 rounded-full hover:bg-white/[0.04]"
         >
           <ChevronLeft size={16} />
           <span>返回</span>
         </button>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <SaveStatus status={saveStatus} />
           <button
             onClick={handleExport}
-            className="p-1.5 rounded-full text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04] transition-colors"
+            className="p-2.5 rounded-full text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04] transition-colors"
             title="导出为 Markdown"
           >
             <Download size={14} />
@@ -314,7 +315,7 @@ export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={handlePublish}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full
               bg-white/[0.08] border border-white/[0.06] backdrop-blur-md
               text-sm text-zinc-200 hover:text-white hover:bg-white/[0.12]
               transition-all duration-200"

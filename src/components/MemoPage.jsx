@@ -278,12 +278,13 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
 
     return (
       <div className="flex-1 flex flex-col h-screen overflow-hidden bg-surface">
-        {/* Minimal floating header */}
-        <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-3">
+        {/* Minimal floating header with safe-area */}
+        <div className="absolute top-0 left-0 right-0 z-20 safe-area-header
+          flex items-center justify-between px-6 py-3">
           <button
             onClick={handleBack}
             className="flex items-center gap-1 text-sm text-ink-tertiary hover:text-ink
-              transition-colors px-3 py-1.5 rounded-full hover:bg-surface-hover"
+              transition-colors px-3 py-2.5 rounded-full hover:bg-surface-hover"
           >
             ← 返回
           </button>
@@ -292,7 +293,7 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handlePublish}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-full
                 bg-white/[0.08] border border-white/[0.06] backdrop-blur-md
                 text-sm text-zinc-200 hover:text-white hover:bg-white/[0.12]
                 transition-all duration-200"
@@ -352,7 +353,7 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
             {selectMode ? (
               <button
                 onClick={exitSelectMode}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-ink-secondary text-xs font-medium hover:bg-surface-hover transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-ink-secondary text-xs font-medium hover:bg-surface-hover transition-colors"
               >
                 取消
               </button>
@@ -360,14 +361,14 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
               <>
                 <button
                   onClick={() => setSelectMode(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-ink-secondary text-xs font-medium hover:bg-surface-hover transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-ink-secondary text-xs font-medium hover:bg-surface-hover transition-colors"
                 >
                   <ListChecks size={13} />
                   管理
                 </button>
                 <button
                   onClick={handleNew}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-ink text-surface text-xs font-medium hover:opacity-90 transition-opacity"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-ink text-surface text-xs font-medium hover:opacity-90 transition-opacity"
                 >
                   <Plus size={13} />
                   新备忘录

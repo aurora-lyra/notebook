@@ -88,7 +88,7 @@ const DraftItem = memo(function DraftItem({ entry, isActive, onSelect, isModifie
           {format(date, 'M月d日 EEEE')} · {isMemo ? '备忘录' : '日记'}
         </p>
         {isModified && (
-          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-accent/10 text-accent">
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] bg-accent/10 text-accent">
             <FileEdit size={10} />
             已修改
           </span>
@@ -294,14 +294,14 @@ export default function DraftsPage({ onLocalChange, onEditingChange, syncVersion
             {selectMode ? (
               <button
                 onClick={exitSelectMode}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-ink-secondary text-xs font-medium hover:bg-surface-hover transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-ink-secondary text-xs font-medium hover:bg-surface-hover transition-colors"
               >
                 取消
               </button>
             ) : (
               <button
                 onClick={() => setSelectMode(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-ink-secondary text-xs font-medium hover:bg-surface-hover transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-ink-secondary text-xs font-medium hover:bg-surface-hover transition-colors"
               >
                 <ListChecks size={13} />
                 管理

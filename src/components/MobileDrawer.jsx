@@ -105,16 +105,18 @@ export default function MobileDrawer({
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 pb-2">
-          <h1 className="text-base font-semibold text-ink tracking-tight">
-            Notebook
-          </h1>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-md text-ink-tertiary hover:bg-surface-hover transition-colors"
-          >
-            <X size={18} />
-          </button>
+        <div className="safe-area-header">
+          <div className="flex items-center justify-between p-4 pb-2">
+            <h1 className="text-base font-semibold text-ink tracking-tight">
+              Notebook
+            </h1>
+            <button
+              onClick={onClose}
+              className="p-2.5 rounded-md text-ink-tertiary hover:bg-surface-hover transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* New entry */}
@@ -124,7 +126,7 @@ export default function MobileDrawer({
               onNewEntry();
               onClose();
             }}
-            className="w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-sm text-ink-secondary hover:bg-surface-hover transition-colors"
+            className="w-full flex items-center gap-2 px-2.5 py-2.5 rounded-md text-sm text-ink-secondary hover:bg-surface-hover transition-colors"
           >
             <Plus size={15} />
             <span>新建</span>
@@ -137,7 +139,7 @@ export default function MobileDrawer({
             <button
               key={id}
               onClick={() => handleNav(id)}
-              className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors
+              className={`w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-md text-sm transition-colors
                 ${activeView === id
                   ? 'bg-surface-active text-ink font-medium'
                   : 'text-ink-secondary hover:bg-surface-hover hover:text-ink'
@@ -196,26 +198,26 @@ export default function MobileDrawer({
         </nav>
 
         {/* Footer */}
-        <div className="border-t border-border px-2 py-2.5 shrink-0">
+        <div className="border-t border-border px-2 py-2.5 shrink-0 safe-area-footer">
           {/* Theme toggle */}
           <button
             onClick={onToggleTheme}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-ink-secondary hover:bg-surface-hover transition-colors mb-1"
+            className="w-full flex items-center gap-2 px-2.5 py-2.5 rounded-md text-xs text-ink-secondary hover:bg-surface-hover transition-colors mb-1"
           >
-            {isDark ? <Sun size={13} className="shrink-0" /> : <Moon size={13} className="shrink-0" />}
+            {isDark ? <Sun size={15} className="shrink-0" /> : <Moon size={15} className="shrink-0" />}
             <span>{isDark ? '浅色模式' : '深色模式'}</span>
           </button>
 
           {/* Sync indicator */}
-          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-ink-secondary hover:bg-surface-hover transition-colors mb-1">
+          <div className="flex items-center gap-2 px-2.5 py-2.5 rounded-md text-xs text-ink-secondary mb-1">
             {user ? (
               <>
-                <Cloud size={13} className="text-success" />
+                <Cloud size={15} className="text-success" />
                 <span>已同步云端</span>
               </>
             ) : (
               <>
-                <CloudOff size={13} className="text-ink-faint" />
+                <CloudOff size={15} className="text-ink-faint" />
                 <span className="text-ink-faint">仅本地存储</span>
               </>
             )}
@@ -223,31 +225,31 @@ export default function MobileDrawer({
 
           {/* User info + logout */}
           {user ? (
-            <div className="flex items-center justify-between px-2.5 py-1.5 rounded-md hover:bg-surface-hover transition-colors mb-1">
+            <div className="flex items-center justify-between px-2.5 py-2.5 rounded-md hover:bg-surface-hover transition-colors mb-1">
               <div className="flex items-center gap-2 min-w-0">
                 <div className="w-6 h-6 rounded-full bg-accent-surface flex items-center justify-center shrink-0">
-                  <User size={13} className="text-accent" />
+                  <User size={15} className="text-accent" />
                 </div>
                 <span className="text-xs text-ink-secondary truncate">
                   {user.email}
                 </span>
               </div>
-              <div className="flex items-center gap-0.5">
+              <div className="flex items-center gap-1">
                 {onNavigateSettings && (
                   <button
                     onClick={() => { onNavigateSettings(); onClose(); }}
                     title="设置"
-                    className="p-1 rounded hover:bg-surface-active text-ink-tertiary hover:text-ink transition-colors"
+                    className="p-2.5 rounded hover:bg-surface-active text-ink-tertiary hover:text-ink transition-colors"
                   >
-                    <Settings size={13} />
+                    <Settings size={15} />
                   </button>
                 )}
                 <button
                   onClick={onSignOut}
                   title="退出登录"
-                  className="p-1 rounded hover:bg-surface-active text-ink-tertiary hover:text-ink transition-colors"
+                  className="p-2.5 rounded hover:bg-surface-active text-ink-tertiary hover:text-ink transition-colors"
                 >
-                  <LogOut size={13} />
+                  <LogOut size={15} />
                 </button>
               </div>
             </div>

@@ -30,16 +30,17 @@ export default function BatchActionBar({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50
-            flex items-center gap-3 px-5 py-3 rounded-2xl
+          className="batch-action-bar fixed bottom-6 left-1/2 -translate-x-1/2 z-50
+            flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 rounded-2xl
             bg-surface/95 border border-border backdrop-blur-xl
-            shadow-[0_8px_40px_rgba(0,0,0,0.2)]"
+            shadow-[0_8px_40px_rgba(0,0,0,0.2)]
+            safe-area-bottom"
         >
           {/* Select all / deselect */}
           <button
             onClick={allSelected ? onDeselectAll : onSelectAll}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full
-              text-sm text-ink-tertiary hover:text-ink hover:bg-surface-hover
+            className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 rounded-full
+              text-xs sm:text-sm text-ink-tertiary hover:text-ink hover:bg-surface-hover
               transition-all duration-200"
           >
             {allSelected ? <CheckSquare size={15} /> : <Square size={15} />}
@@ -50,8 +51,8 @@ export default function BatchActionBar({
           <div className="w-px h-5 bg-border" />
 
           {/* Selected count */}
-          <span className="text-sm text-ink-tertiary px-2">
-            已选 <span className="text-ink font-medium">{selectedCount}</span> 篇
+          <span className="text-xs sm:text-sm text-ink-tertiary px-1 sm:px-2 whitespace-nowrap">
+            已选 <span className="text-ink font-medium">{selectedCount}</span>
           </span>
 
           {/* Divider */}
@@ -61,9 +62,9 @@ export default function BatchActionBar({
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={onDelete}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-full
+            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-full
               bg-danger-surface border border-danger/20
-              text-sm text-danger hover:bg-danger-surface
+              text-xs sm:text-sm text-danger hover:bg-danger-surface
               transition-all duration-200"
           >
             <Trash2 size={14} />
@@ -73,7 +74,7 @@ export default function BatchActionBar({
           {/* Exit */}
           <button
             onClick={onExit}
-            className="p-1.5 rounded-full text-ink-tertiary hover:text-ink
+            className="p-2.5 rounded-full text-ink-tertiary hover:text-ink
               hover:bg-surface-hover transition-all duration-200"
             title="退出选择"
           >

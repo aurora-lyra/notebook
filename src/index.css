@@ -727,6 +727,35 @@ button img {
   .diary-editor .tiptap h3 {
     font-size: 1.0625rem;
   }
+
+  /* Reduce editor bottom padding on mobile */
+  .diary-editor {
+    padding-bottom: 8rem;
+  }
+
+  /* BatchActionBar — full width on narrow screens */
+  .batch-action-bar {
+    left: 1rem;
+    right: 1rem;
+    transform: none;
+    max-width: none;
+  }
+}
+
+/* Safe area padding for fixed elements */
+.safe-area-header {
+  padding-top: max(env(safe-area-inset-top), 0px);
+}
+
+.safe-area-footer {
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+
+/* Checklist row — more breathing room on mobile */
+@media (hover: none) {
+  .checklist-row {
+    padding: 8px 4px;
+  }
 }
 
 /* ========================================
@@ -925,8 +954,8 @@ button img {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-md);
   color: var(--color-ink-faint);
   transition: all 0.15s var(--ease-out);

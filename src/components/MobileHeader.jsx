@@ -42,7 +42,7 @@ export default function MobileHeader({
               setSearchOpen(false);
               onSearchChange('');
             }}
-            className="p-1.5 rounded-md text-ink-tertiary hover:bg-surface-hover transition-colors"
+            className="p-2.5 rounded-md text-ink-tertiary hover:bg-surface-hover transition-colors"
           >
             <X size={18} />
           </button>
@@ -59,16 +59,16 @@ export default function MobileHeader({
         <div className="flex items-center justify-between px-3 py-2.5">
           <button
             onClick={onMenuOpen}
-            className="p-1.5 rounded-md text-ink-secondary hover:bg-surface-hover transition-colors"
+            className="p-2.5 rounded-md text-ink-secondary hover:bg-surface-hover transition-colors"
           >
             <Menu size={20} />
           </button>
-          <h1 className="text-sm font-semibold text-ink truncate mx-3">
+          <h1 className="text-sm font-semibold text-ink truncate mx-3" title={label}>
             {label}
           </h1>
           <button
             onClick={() => setSearchOpen(true)}
-            className="p-1.5 rounded-md text-ink-secondary hover:bg-surface-hover transition-colors"
+            className="p-2.5 rounded-md text-ink-secondary hover:bg-surface-hover transition-colors"
           >
             <Search size={18} />
           </button>

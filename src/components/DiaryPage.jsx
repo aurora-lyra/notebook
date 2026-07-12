@@ -337,7 +337,7 @@ export default function DiaryPage({ onLocalChange, onEditingChange, syncVersion 
             {selectMode ? (
               <button
                 onClick={exitSelectMode}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-ink-secondary text-xs font-medium hover:bg-surface-hover transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-ink-secondary text-xs font-medium hover:bg-surface-hover transition-colors"
               >
                 取消
               </button>
@@ -345,7 +345,7 @@ export default function DiaryPage({ onLocalChange, onEditingChange, syncVersion 
               <>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-ink-secondary text-xs font-medium hover:bg-surface-hover transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-ink-secondary text-xs font-medium hover:bg-surface-hover transition-colors"
                   title="导入 Markdown 文件"
                 >
                   <Upload size={13} />
@@ -353,14 +353,14 @@ export default function DiaryPage({ onLocalChange, onEditingChange, syncVersion 
                 </button>
                 <button
                   onClick={() => setSelectMode(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-ink-secondary text-xs font-medium hover:bg-surface-hover transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-ink-secondary text-xs font-medium hover:bg-surface-hover transition-colors"
                 >
                   <CheckSquare size={13} />
                   管理
                 </button>
                 <button
                   onClick={handleNew}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-ink text-surface text-xs font-medium hover:opacity-90 transition-opacity"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-ink text-surface text-xs font-medium hover:opacity-90 transition-opacity"
                 >
                   <Plus size={13} />
                   新日记
