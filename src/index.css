@@ -779,7 +779,7 @@ button img {
 }
 
 .checklist-progress-text {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-ink-faint);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.03em;
@@ -795,7 +795,7 @@ button img {
 /* Single row */
 .checklist-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   padding: 6px 4px;
   border-radius: var(--radius-md);
@@ -812,7 +812,6 @@ button img {
   flex-shrink: 0;
   width: 16px;
   height: 16px;
-  margin-top: 3px;
   border-radius: 50%;
   border: 1.5px solid var(--color-border-strong);
   display: flex;
@@ -835,8 +834,8 @@ button img {
 
 /* Text — inline */
 .checklist-text {
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
   color: var(--color-ink);
   transition: all 0.3s var(--ease-out);
   display: inline;
@@ -857,8 +856,8 @@ button img {
 /* Input — invisible, inline */
 .checklist-input {
   width: 100%;
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
   color: var(--color-ink);
   background: transparent;
   border: none;
@@ -875,10 +874,10 @@ button img {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  margin-top: 4px;
+  margin-left: 8px;
   padding: 2px 8px;
   border-radius: 9999px;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-ink-tertiary);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.04);
@@ -901,7 +900,6 @@ button img {
   opacity: 0;
   transition: opacity 0.2s var(--ease-out);
   flex-shrink: 0;
-  margin-top: 1px;
 }
 
 .checklist-row:hover .checklist-controls {
