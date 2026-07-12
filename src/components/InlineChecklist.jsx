@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { motion } from 'framer-motion';
 import { format, isPast, isToday, addDays, startOfDay } from 'date-fns';
-import { Bell, X } from 'lucide-react';
+import { Bell, X, Plus } from 'lucide-react';
 
 const PRIORITY_COLORS = {
   high: 'var(--color-priority-high)',
@@ -364,6 +364,18 @@ export default function InlineChecklist({ todos = [], onChange }) {
   const doneCount = localTodos.filter((t) => t.done).length;
   const totalCount = localTodos.filter((t) => t.text.trim()).length;
 
+  // Add a new item at the end of the list
+  const handleAddLast = useCallback(() => {
+    setLocalTodos((prev) => {
+      const newTodo = {
+        id: uid(), text: '', done: false, priority: 'medium', dueAt: null, remindedAt: null,
+      };
+      const updated = [...prev, newTodo];
+      onChangeRef.current?.(updated);
+      return updated;
+    });
+  }, []);
+
   return (
     <div className="checklist-container">
       {totalCount > 0 && (
@@ -394,6 +406,17 @@ export default function InlineChecklist({ todos = [], onChange }) {
         ))}
         <div ref={endRef} />
       </div>
+
+      {/* Add new todo button */}
+      <button
+        onClick={handleAddLast}
+        className="flex items-center gap-2 mt-4 px-3 py-2 rounded-lg
+          text-sm text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]
+          transition-all duration-200"
+      >
+        <Plus size={14} />
+        <span>添加待办</span>
+      </button>
     </div>
   );
 }
