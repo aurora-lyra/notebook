@@ -113,16 +113,16 @@ export default function App() {
     setActiveEntryId(id);
   }, []);
 
-  /** Save to local + sync to cloud. */
+  /** Save to local only — no cloud sync. */
   const handleSave = useCallback(
     (patch) => {
       if (activeEntryId) {
         save(patch);
         refresh();
-        onLocalChange();
+        // No onLocalChange — drafts are local-only
       }
     },
-    [activeEntryId, save, refresh, onLocalChange],
+    [activeEntryId, save, refresh],
   );
 
   /** Publish — save + sync to cloud. */
