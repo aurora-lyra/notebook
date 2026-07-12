@@ -18,6 +18,7 @@ import {
 import { MOODS, MOOD_KEYS } from '../lib/moods';
 import { useEntries } from '../hooks/useEntries';
 import { serialize } from '../lib/markdown';
+import CloudEntriesModal from './CloudEntriesModal';
 
 const TABS = [
   { id: 'settings', label: '个人设置', icon: Settings },
@@ -90,6 +91,8 @@ export default function SettingsPage({
   onChangePassword,
   onClose,
   onBatchUpload,
+  onBatchDownload,
+  onDeleteRemote,
   syncVersion = 0,
 }) {
   const [activeTab, setActiveTab] = useState('settings');
@@ -181,7 +184,10 @@ export default function SettingsPage({
             onChangePassword={onChangePassword}
             onExportAll={handleExportAll}
             onBatchUpload={onBatchUpload}
+            onBatchDownload={onBatchDownload}
+            onDeleteRemote={onDeleteRemote}
             entryCount={entries.length}
+            localEntryIds={entries.map((e) => e.id)}
           />
         ) : (
           <StatsTab stats={stats} />
@@ -191,9 +197,10 @@ export default function SettingsPage({
   );
 }
 
-function SettingsTab({ user, isDark, onToggleTheme, onChangePassword, onExportAll, onBatchUpload, entryCount }) {
+function SettingsTab({ user, isDark, onToggleTheme, onChangePassword, onExportAll, onBatchUpload, onBatchDownload, onDeleteRemote, entryCount, localEntryIds }) {
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
+  const [cloudModalOpen, setCloudModalOpen] = useState(false);
 
   const handleBatchUpload = useCallback(async () => {
     if (!onBatchUpload) return;
@@ -270,31 +277,51 @@ function SettingsTab({ user, isDark, onToggleTheme, onChangePassword, onExportAl
               {user ? 'Supabase + 本地' : '仅本地'}
             </span>
           </div>
-          {user && onBatchUpload && (
-            <div className="pt-2 border-t border-border">
-              <p className="text-xs text-ink-tertiary mb-2">
-                将所有已发布条目同步到云端
-              </p>
-              <button
-                onClick={handleBatchUpload}
-                disabled={uploading}
-                className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg
-                  bg-accent text-white hover:opacity-90 transition-opacity
-                  disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {uploading ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
+          {user && (
+            <div className="pt-2 border-t border-border space-y-3">
+              {/* Upload */}
+              {onBatchUpload && (
+                <div>
+                  <p className="text-xs text-ink-tertiary mb-2">
+                    将所有已发布条目同步到云端
+                  </p>
+                  <button
+                    onClick={handleBatchUpload}
+                    disabled={uploading}
+                    className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg
+                      bg-accent text-white hover:opacity-90 transition-opacity
+                      disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {uploading ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Cloud size={14} />
+                    )}
+                    <span>{uploading ? '上传中…' : '批量上传到云端'}</span>
+                  </button>
+                  {uploadResult === 'success' && (
+                    <p className="text-xs text-green-400 mt-2">上传完成</p>
+                  )}
+                  {uploadResult === 'error' && (
+                    <p className="text-xs text-red-400 mt-2">上传失败，请重试</p>
+                  )}
+                </div>
+              )}
+
+              {/* Cloud management */}
+              <div>
+                <p className="text-xs text-ink-tertiary mb-2">
+                  从云端读取或管理云端日记
+                </p>
+                <button
+                  onClick={() => setCloudModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg
+                    border border-border text-ink-secondary hover:bg-surface-hover transition-colors"
+                >
                   <Cloud size={14} />
-                )}
-                <span>{uploading ? '上传中…' : '批量上传到云端'}</span>
-              </button>
-              {uploadResult === 'success' && (
-                <p className="text-xs text-green-400 mt-2">上传完成</p>
-              )}
-              {uploadResult === 'error' && (
-                <p className="text-xs text-red-400 mt-2">上传失败，请重试</p>
-              )}
+                  <span>管理云端日记</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -314,6 +341,15 @@ function SettingsTab({ user, isDark, onToggleTheme, onChangePassword, onExportAl
           </button>
         </div>
       </Section>
+
+      {/* Cloud entries modal */}
+      <CloudEntriesModal
+        open={cloudModalOpen}
+        onClose={() => setCloudModalOpen(false)}
+        onDownload={onBatchDownload}
+        onDelete={onDeleteRemote}
+        localEntryIds={localEntryIds}
+      />
     </div>
   );
 }

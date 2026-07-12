@@ -18,7 +18,7 @@ import { useAuth } from './hooks/useAuth';
 import { useSync } from './hooks/useSync';
 import { useTheme } from './hooks/useTheme';
 import { supabase } from './lib/supabase';
-import { pushAll } from './lib/syncEngine';
+import { pushAll, pullEntriesByIds, deleteRemoteEntries } from './lib/syncEngine';
 import * as db from './lib/db';
 
 /**
@@ -177,6 +177,18 @@ export default function App() {
     await pushAll();
   }, []);
 
+  /** Download selected entries from cloud. */
+  const handleBatchDownload = useCallback(async (entries) => {
+    const ids = entries.map((e) => e.id);
+    await pullEntriesByIds(ids);
+    setSyncVersion((v) => v + 1);
+  }, []);
+
+  /** Delete entries from cloud. */
+  const handleDeleteRemote = useCallback(async (ids) => {
+    await deleteRemoteEntries(ids);
+  }, []);
+
   const handleChangePassword = useCallback(async (currentPassword, newPassword) => {
     // First verify current password by re-authenticating
     const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -259,6 +271,8 @@ export default function App() {
             onChangePassword={() => setShowChangePassword(true)}
             onClose={() => setActiveView('all')}
             onBatchUpload={handleBatchUpload}
+            onBatchDownload={handleBatchDownload}
+            onDeleteRemote={handleDeleteRemote}
             syncVersion={syncVersion}
           />
         </div>

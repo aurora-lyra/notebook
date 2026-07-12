@@ -522,6 +522,98 @@ export async function pushAll() {
   lastPushTime = Date.now();
 }
 
+/**
+ * Fetch all remote entries for the current user (read-only, no merge).
+ * Used for cloud management UI.
+ */
+export async function fetchAllRemoteEntries() {
+  if (!currentUserId || !isConfigured()) {
+    throw new Error('未配置云端或未登录');
+  }
+
+  const { data, error } = await supabase
+    .from('entries')
+    .select('*')
+    .eq('user_id', currentUserId)
+    .order('updated_at', { ascending: false });
+
+  if (error) {
+    console.error('[Sync] Fetch remote entries failed:', error);
+    throw error;
+  }
+
+  return (data || []).map(entryFromRemote);
+}
+
+/**
+ * Delete entries from the cloud by IDs.
+ * Does NOT affect local storage.
+ */
+export async function deleteRemoteEntries(ids) {
+  if (!currentUserId || !isConfigured()) {
+    throw new Error('未配置云端或未登录');
+  }
+  if (!ids || ids.length === 0) return;
+
+  const { error } = await supabase
+    .from('entries')
+    .delete()
+    .in('id', ids)
+    .eq('user_id', currentUserId);
+
+  if (error) {
+    console.error('[Sync] Delete remote entries failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Download specific entries from cloud and merge into local.
+ * Used for selective sync from settings.
+ */
+export async function pullEntriesByIds(ids) {
+  if (!currentUserId || !isConfigured()) {
+    throw new Error('未配置云端或未登录');
+  }
+  if (!ids || ids.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('entries')
+    .select('*')
+    .in('id', ids)
+    .eq('user_id', currentUserId);
+
+  if (error) {
+    console.error('[Sync] Fetch entries by IDs failed:', error);
+    throw error;
+  }
+
+  const remotes = (data || []).map(entryFromRemote);
+  const locals = readLocalEntries();
+  const localMap = new Map(locals.map((l) => [l.id, l]));
+  const merged = [];
+
+  for (const remote of remotes) {
+    const local = localMap.get(remote.id);
+    if (!local) {
+      merged.push(remote);
+    } else {
+      // Remote wins for downloaded entries
+      merged.push(remote);
+    }
+  }
+
+  // Keep local entries that weren't downloaded
+  for (const local of locals) {
+    if (!remotes.find((r) => r.id === local.id)) {
+      merged.push(local);
+    }
+  }
+
+  writeLocalEntries(merged);
+  return remotes;
+}
+
 /* ============================================================
    Realtime subscriptions
    ============================================================ */
