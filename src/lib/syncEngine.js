@@ -237,31 +237,36 @@ async function pushEntries(userId) {
     }
   }
 
-  // ─── Step 2: Upsert remaining local entries ───
+  // ─── Step 2: Upsert remaining local entries (published only) ───
   const locals = readLocalEntries();
   if (locals.length === 0) return;
 
   // Get remote entries to compare
-  const { data: remotes } = await supabase
+  const { data: remotes, error: fetchError } = await supabase
     .from('entries')
     .select('*')
     .eq('user_id', userId);
+
+  if (fetchError) {
+    console.error('[Sync] Failed to fetch remote entries:', fetchError);
+    return;
+  }
 
   const remoteMap = new Map((remotes || []).map((r) => [r.id, r]));
   const toUpsert = [];
 
   for (const local of locals) {
+    // Only push published entries — drafts stay local
+    if ((local.status || 'draft') === 'draft') continue;
+
     const remote = remoteMap.get(local.id);
     if (!remote) {
-      // New local entry → push
       toUpsert.push(entryToRemote(local, userId));
     } else {
-      // Exists on both → resolve conflict
       const winner = resolveConflict(local, entryFromRemote(remote));
       if (winner === 'local') {
         toUpsert.push(entryToRemote(local, userId));
       }
-      // If remote wins, we'll pull it in the next step
     }
   }
 
@@ -271,6 +276,7 @@ async function pushEntries(userId) {
       .upsert(toUpsert, { onConflict: 'id' });
     if (upsertError) {
       console.error('[Sync] Cloud upsert failed:', upsertError);
+      throw upsertError;
     }
   }
 }
@@ -281,10 +287,15 @@ async function pushTodos(userId) {
   const locals = readLocalTodos();
   if (locals.length === 0) return;
 
-  const { data: remotes } = await supabase
+  const { data: remotes, error: fetchError } = await supabase
     .from('todos')
     .select('*')
     .eq('user_id', userId);
+
+  if (fetchError) {
+    console.error('[Sync] Failed to fetch remote todos:', fetchError);
+    return;
+  }
 
   const remoteMap = new Map((remotes || []).map((r) => [r.id, r]));
   const toUpsert = [];
@@ -302,7 +313,13 @@ async function pushTodos(userId) {
   }
 
   if (toUpsert.length > 0) {
-    await supabase.from('todos').upsert(toUpsert, { onConflict: 'id' });
+    const { error: upsertError } = await supabase
+      .from('todos')
+      .upsert(toUpsert, { onConflict: 'id' });
+    if (upsertError) {
+      console.error('[Sync] Todos upsert failed:', upsertError);
+      throw upsertError;
+    }
   }
 }
 
@@ -313,11 +330,15 @@ async function pushTodos(userId) {
 async function pullEntries(userId) {
   if (!isConfigured()) return;
 
-  const { data: remotes } = await supabase
+  const { data: remotes, error: fetchError } = await supabase
     .from('entries')
     .select('*')
     .eq('user_id', userId);
 
+  if (fetchError) {
+    console.error('[Sync] Failed to pull entries:', fetchError);
+    return;
+  }
   if (!remotes) return;
 
   // Filter out entries that are pending deletion
@@ -357,11 +378,15 @@ async function pullEntries(userId) {
 async function pullTodos(userId) {
   if (!isConfigured()) return;
 
-  const { data: remotes } = await supabase
+  const { data: remotes, error: fetchError } = await supabase
     .from('todos')
     .select('*')
     .eq('user_id', userId);
 
+  if (fetchError) {
+    console.error('[Sync] Failed to pull todos:', fetchError);
+    return;
+  }
   if (!remotes) return;
 
   const locals = readLocalTodos();
@@ -402,15 +427,33 @@ export async function initSync(userId) {
   currentUserId = userId;
   if (!isConfigured()) return { entries: readLocalEntries(), todos: readLocalTodos() };
 
-  // Initial full pull
-  const entries = await pullEntries(userId);
-  const todos = await pullTodos(userId);
+  let entries, todos;
 
-  // Push any local-only items
-  await pushEntries(userId);
-  await pushTodos(userId);
+  // Initial full pull (ignore errors — local data is still valid)
+  try {
+    entries = await pullEntries(userId);
+  } catch (err) {
+    console.error('[Sync] Pull entries failed:', err);
+  }
+  try {
+    todos = await pullTodos(userId);
+  } catch (err) {
+    console.error('[Sync] Pull todos failed:', err);
+  }
 
-  return { entries, todos };
+  // Push any local-only items (ignore errors — will retry on next sync)
+  try {
+    await pushEntries(userId);
+  } catch (err) {
+    console.error('[Sync] Push entries failed:', err);
+  }
+  try {
+    await pushTodos(userId);
+  } catch (err) {
+    console.error('[Sync] Push todos failed:', err);
+  }
+
+  return { entries: entries || readLocalEntries(), todos: todos || readLocalTodos() };
 }
 
 /**

@@ -256,18 +256,21 @@ export default function DraftsPage({ onLocalChange, onEditingChange, syncVersion
     const confirmed = window.confirm(`确定删除选中的 ${selectedIds.size} 项（${parts.join('、')}）？`);
     if (!confirmed) return;
 
-    // Delete draft entries
+    // Delete draft entries (local only)
     if (draftIds.length > 0) {
       batchRemove(draftIds);
     }
 
     // Clear localStorage drafts for modified entries (keep the published entry)
-    for (const originalId of modifiedOriginalIds) {
-      clearDraftLocal(originalId);
+    if (modifiedOriginalIds.length > 0) {
+      for (const originalId of modifiedOriginalIds) {
+        clearDraftLocal(originalId);
+      }
+      refreshPublished?.();
+      // Only sync when modifying published entries
+      onLocalChange?.();
     }
-    refreshPublished?.();
 
-    onLocalChange?.();
     exitSelectMode();
   }, [selectedIds, allDrafts, batchRemove, refreshPublished, onLocalChange, exitSelectMode]);
 

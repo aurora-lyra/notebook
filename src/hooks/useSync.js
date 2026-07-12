@@ -28,9 +28,13 @@ export function useSync(user, onRemoteChange) {
     initialized.current = true;
 
     (async () => {
-      await initSync(user.id);
+      try {
+        await initSync(user.id);
+      } catch (err) {
+        console.error('[Sync] Init failed:', err);
+      }
+      // Always subscribe realtime, even if initSync failed
       subscribeRealtime(user.id, (table) => {
-        // Notify the app that remote data changed
         onRemoteChange?.(table);
       });
     })();

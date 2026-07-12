@@ -287,7 +287,7 @@ export default function DiaryPage({ onLocalChange, onEditingChange, syncVersion 
 
           const entry = create({ type: 'diary', title, content });
           setActiveId(entry.id);
-          onLocalChange?.();
+          // No onLocalChange — imported entry is a local-only draft
         } catch (err) {
           console.error('Import failed:', err);
           alert('导入失败，请检查文件格式');
