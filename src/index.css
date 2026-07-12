@@ -952,6 +952,31 @@ button img {
   background: rgba(0, 0, 0, 0.04);
 }
 
+/* Glass Toolbar — Light Mode */
+[data-theme="light"] .glass-toolbar {
+  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .glass-toolbar .tb-divider {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .glass-toolbar .tb-btn {
+  color: #71717a;
+}
+
+[data-theme="light"] .glass-toolbar .tb-btn:hover {
+  color: #18181b;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .glass-toolbar .tb-btn.active {
+  color: #18181b;
+  background: rgba(0, 0, 0, 0.06);
+}
+
 /* ========================================
    Swipeable Row — Mobile Swipe-to-Actions
    ======================================== */

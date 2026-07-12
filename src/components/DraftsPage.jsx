@@ -189,18 +189,11 @@ export default function DraftsPage({ onLocalChange, onEditingChange, syncVersion
 
   const handlePublish = useCallback(() => {
     if (!activeId) return;
-
-    const draft = activeEntry;
-    if (draft?._isModified) {
-      const { _isModified, _originalId, id, createdAt, ...draftData } = draft;
-      update(_originalId, { ...draftData, status: 'published' });
-      clearDraftLocal(_originalId);
-      onLocalChange?.();
-    } else {
-      onLocalChange?.();
-    }
+    // DiaryEditor.handlePublish already called onSave (update) and clearDraftLocal.
+    // We only need to trigger cloud sync and close the editor.
+    onLocalChange?.();
     setActiveId(null);
-  }, [activeId, activeEntry, update, onLocalChange]);
+  }, [activeId, onLocalChange]);
 
   const handleBack = useCallback(() => {
     setActiveId(null);

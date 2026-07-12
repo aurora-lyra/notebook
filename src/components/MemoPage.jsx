@@ -282,13 +282,13 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
         <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-3">
           <button
             onClick={handleBack}
-            className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-300
-              transition-colors px-3 py-1.5 rounded-full hover:bg-white/[0.04]"
+            className="flex items-center gap-1 text-sm text-ink-tertiary hover:text-ink
+              transition-colors px-3 py-1.5 rounded-full hover:bg-surface-hover"
           >
             ← 返回
           </button>
           <div className="flex items-center gap-3">
-            <span className="text-[11px] text-zinc-600">草稿已保存在本地</span>
+            <span className="text-[11px] text-ink-faint">草稿已保存在本地</span>
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handlePublish}
@@ -308,7 +308,7 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
           <div className="diary-editor max-w-[680px] mx-auto px-6 md:px-8 pt-28 md:pt-32 pb-40 relative z-10">
             {/* Date */}
             <div className="mb-8">
-              <span className="text-[11px] text-zinc-600 tracking-[0.15em] uppercase select-none">
+              <span className="text-[11px] text-ink-faint tracking-[0.15em] uppercase select-none">
                 {format(new Date(activeEntry.createdAt), 'yyyy · M月d日 · EEEE')}
               </span>
             </div>
@@ -319,7 +319,7 @@ export default function MemoPage({ onLocalChange, syncVersion = 0 }) {
               onChange={handleTitleChange}
               onBlur={handleTitleBlur}
               placeholder="备忘录标题…"
-              className="w-full text-3xl font-light text-zinc-200 placeholder:text-zinc-700
+              className="w-full text-3xl font-light text-ink placeholder:text-ink-faint
                 outline-none bg-transparent leading-tight tracking-wide"
               style={{ fontFamily: 'var(--font-serif)' }}
             />

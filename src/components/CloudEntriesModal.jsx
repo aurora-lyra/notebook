@@ -43,6 +43,7 @@ export default function CloudEntriesModal({ open, onClose, onDownload, onDelete,
     if (!open) {
       setSelected(new Set());
       setAction(null);
+      setError(null);
     }
   }, [open, fetchEntries]);
 
@@ -72,10 +73,12 @@ export default function CloudEntriesModal({ open, onClose, onDownload, onDelete,
 
   const handleDelete = useCallback(async () => {
     if (selected.size === 0) return;
+    const confirmed = window.confirm(`确定从云端删除选中的 ${selected.size} 篇日记？此操作不可撤销。`);
+    if (!confirmed) return;
     const ids = [...selected];
     setAction('delete');
     try {
-      onDelete?.(ids);
+      await onDelete?.(ids);
       setEntries((prev) => prev.filter((e) => !selected.has(e.id)));
       setSelected(new Set());
     } catch (err) {

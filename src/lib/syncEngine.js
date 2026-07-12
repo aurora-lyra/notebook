@@ -333,7 +333,8 @@ async function pullEntries(userId) {
   const { data: remotes, error: fetchError } = await supabase
     .from('entries')
     .select('*')
-    .eq('user_id', userId);
+    .eq('user_id', userId)
+    .eq('status', 'published');
 
   if (fetchError) {
     console.error('[Sync] Failed to pull entries:', fetchError);
