@@ -101,9 +101,11 @@ export default function DraftsPage({ onLocalChange, onPublish, onEditingChange, 
       .map((entry) => {
         const draft = readDraftLocal(entry.id);
         if (!draft) return null;
+        // Remove id/createdAt from draft to avoid overriding original entry's identity
+        const { id: _did, createdAt: _dca, ...draftData } = draft;
         return {
           ...entry,
-          ...draft,
+          ...draftData,
           _isModified: true,
           _originalId: entry.id,
         };
@@ -143,17 +145,18 @@ export default function DraftsPage({ onLocalChange, onPublish, onEditingChange, 
     const draft = activeEntry;
     if (draft?._isModified) {
       // Update the original published entry with draft content
-      const { _isModified, _originalId, id, ...draftData } = draft;
+      const { _isModified, _originalId, id, createdAt, ...draftData } = draft;
       update(_originalId, { ...draftData, status: 'published' });
       clearDraftLocal(_originalId);
-      onPublish?.({ status: 'published' });
+      // Direct onLocalChange — App.jsx's handlePublish can't see DraftsPage's activeId
+      onLocalChange?.();
     } else {
-      // New draft — just set status to published
-      update(activeId, { status: 'published' });
+      // New draft — DiaryEditor.handlePublish already merged draft content via onSave
+      // Just sync to cloud
       onLocalChange?.();
     }
     setActiveId(null);
-  }, [activeId, activeEntry, update, onLocalChange, onPublish]);
+  }, [activeId, activeEntry, update, onLocalChange]);
 
   const handleBack = useCallback(() => {
     setActiveId(null);

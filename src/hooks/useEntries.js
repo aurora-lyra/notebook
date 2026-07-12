@@ -62,10 +62,19 @@ export function useEntries(filter = {}, syncVersion = 0) {
     (id, patch) => {
       const updated = db.updateEntry(id, patch);
       if (!updated) return null;
-      // Optimistic: replace in-place
-      setEntries((prev) =>
-        prev.map((e) => (e.id === id ? updated : e)),
-      );
+      // Optimistic: replace in-place, re-apply filter if status changed
+      if ('status' in patch) {
+        setEntries((prev) =>
+          applyFilter(
+            prev.map((e) => (e.id === id ? updated : e)),
+            filterRef.current,
+          ),
+        );
+      } else {
+        setEntries((prev) =>
+          prev.map((e) => (e.id === id ? updated : e)),
+        );
+      }
       return updated;
     },
     [],

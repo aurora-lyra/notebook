@@ -6,7 +6,7 @@ import TipTapEditor from './TipTapEditor';
 import TypeToggle from './TypeToggle';
 import InlineChecklist from './InlineChecklist';
 import { serialize } from '../lib/markdown';
-import { saveDraftLocal, clearDraftLocal } from '../lib/db';
+import { saveDraftLocal, readDraftLocal, clearDraftLocal } from '../lib/db';
 import { MOODS, MOOD_KEYS, WEATHER, WEATHER_KEYS } from '../lib/moods';
 
 /**
@@ -221,25 +221,42 @@ export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
   }, []);
 
   /**
-   * Publish — set status to 'published', clear local draft, sync to cloud.
+   * Publish — merge draft content into main entry, set status to 'published',
+   * clear local draft, sync to cloud.
    */
   const handlePublish = useCallback(() => {
     clearTimeout(statusTimerRef.current);
     setSaveStatus('publishing');
-    onSaveRef.current({ status: 'published' });
+    // Read draft data from localStorage and merge with current state
+    const draft = readDraftLocal(entryIdRef.current) || {};
+    onSaveRef.current({
+      title,
+      content: draft.content ?? entry.content,
+      type,
+      todos,
+      mood,
+      weather,
+      createdAt,
+      ...draft,           // draft overrides any stale local state
+      status: 'published',
+    });
     clearDraftLocal(entryIdRef.current);
     setSaveStatus('published');
     onPublishRef.current?.();
-  }, []);
+  }, [title, type, todos, mood, weather, createdAt, entry.content]);
 
   const entryDate = new Date(createdAt);
 
   const handleExport = useCallback(() => {
-    const mdContent = serialize(entry.content);
+    // Read latest content from draft or current state
+    const draft = readDraftLocal(entryIdRef.current) || {};
+    const content = draft.content ?? entry.content;
+    const exportTitle = draft.title ?? title ?? entry.title;
+    const mdContent = serialize(content);
     const dateStr = format(entryDate, 'yyyy-MM-dd');
-    const safeTitle = (entry.title || '无标题').replace(/[<>:"/\\|?*]/g, '-').slice(0, 50);
+    const safeTitle = (exportTitle || '无标题').replace(/[<>:"/\\|?*]/g, '-').slice(0, 50);
     const filename = `${dateStr}-${safeTitle}.md`;
-    const header = `# ${entry.title || '无标题'}\n\n> ${format(entryDate, 'yyyy年M月d日 EEEE')}\n\n`;
+    const header = `# ${exportTitle || '无标题'}\n\n> ${format(entryDate, 'yyyy年M月d日 EEEE')}\n\n`;
     const blob = new Blob([header + mdContent], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -249,7 +266,7 @@ export default function DiaryEditor({ entry, onSave, onPublish, onBack }) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [entry.title, entry.content, entryDate]);
+  }, [title, entry.title, entry.content, entryDate]);
 
   const moodItems = MOOD_KEYS.map((key) => ({ key, ...MOODS[key] }));
   const weatherItems = WEATHER_KEYS.map((key) => ({ key, ...WEATHER[key] }));

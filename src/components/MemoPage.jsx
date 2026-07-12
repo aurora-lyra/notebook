@@ -18,9 +18,12 @@ const MemoItem = memo(function MemoItem({ entry, isActive, onSelect, selectMode,
   const done = todos.filter((t) => t.done).length;
   const date = new Date(entry.createdAt);
   const longPressTimer = useRef(null);
+  const didLongPress = useRef(false);
 
   const handlePointerDown = useCallback(() => {
+    didLongPress.current = false;
     longPressTimer.current = setTimeout(() => {
+      didLongPress.current = true;
       onLongPress?.(entry.id);
     }, 500);
   }, [entry.id, onLongPress]);
@@ -30,6 +33,11 @@ const MemoItem = memo(function MemoItem({ entry, isActive, onSelect, selectMode,
   }, []);
 
   const handleClick = useCallback(() => {
+    // Skip click if long-press just triggered
+    if (didLongPress.current) {
+      didLongPress.current = false;
+      return;
+    }
     if (selectMode) {
       onToggleSelect?.(entry.id);
     } else {

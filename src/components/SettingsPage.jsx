@@ -94,7 +94,7 @@ export default function SettingsPage({
 }) {
   const [activeTab, setActiveTab] = useState('settings');
 
-  const { entries } = useEntries({ type: 'diary' }, syncVersion);
+  const { entries } = useEntries({ type: 'diary', status: 'published' }, syncVersion);
 
   // Stats
   const stats = useMemo(() => {

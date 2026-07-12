@@ -24,9 +24,12 @@ const DiaryItem = memo(function DiaryItem({ entry, isActive, onSelect, selectMod
 
   const date = new Date(entry.createdAt);
   const longPressTimer = useRef(null);
+  const didLongPress = useRef(false);
 
   const handlePointerDown = useCallback(() => {
+    didLongPress.current = false;
     longPressTimer.current = setTimeout(() => {
+      didLongPress.current = true;
       onLongPress?.(entry.id);
     }, 500);
   }, [entry.id, onLongPress]);
@@ -36,6 +39,11 @@ const DiaryItem = memo(function DiaryItem({ entry, isActive, onSelect, selectMod
   }, []);
 
   const handleClick = useCallback(() => {
+    // Skip click if long-press just triggered
+    if (didLongPress.current) {
+      didLongPress.current = false;
+      return;
+    }
     if (selectMode) {
       onToggleSelect?.(entry.id);
     } else {
