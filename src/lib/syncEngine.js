@@ -524,7 +524,7 @@ export async function pushAll() {
 
 /**
  * Fetch all remote entries for the current user (read-only, no merge).
- * Used for cloud management UI.
+ * Only returns published entries — drafts are local-only.
  */
 export async function fetchAllRemoteEntries() {
   if (!currentUserId || !isConfigured()) {
@@ -535,6 +535,7 @@ export async function fetchAllRemoteEntries() {
     .from('entries')
     .select('*')
     .eq('user_id', currentUserId)
+    .eq('status', 'published')
     .order('updated_at', { ascending: false });
 
   if (error) {
