@@ -274,19 +274,28 @@ const ChecklistRow = memo(function ChecklistRow({
 /**
  * InlineChecklist — zen inline editing experience for checklist mode.
  */
+function ensureNonEmpty(todos) {
+  if (todos.length > 0) return todos;
+  return [{ id: uid(), text: '', done: false, priority: 'medium', dueAt: null, remindedAt: null }];
+}
+
 export default function InlineChecklist({ todos = [], onChange }) {
-  const [localTodos, setLocalTodos] = useState(todos);
+  const [localTodos, setLocalTodos] = useState(() => ensureNonEmpty(todos));
   const endRef = useRef(null);
   const onChangeRef = useRef(onChange);
+  const prevTodosRef = useRef(todos);
 
   // Keep onChange ref fresh
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
 
-  // Sync from parent when todos prop changes
+  // Sync from parent when todos prop changes (but not if parent sends empty and we have content)
   useEffect(() => {
-    setLocalTodos(todos);
+    if (todos === prevTodosRef.current) return;
+    prevTodosRef.current = todos;
+    if (todos.length === 0 && localTodos.some((t) => t.text.trim())) return;
+    setLocalTodos(ensureNonEmpty(todos));
   }, [todos]);
 
   // Notify parent of changes — use ref to avoid stale closure
@@ -347,20 +356,6 @@ export default function InlineChecklist({ todos = [], onChange }) {
     [],
   );
 
-  const displayTodos =
-    localTodos.length > 0
-      ? localTodos
-      : [
-          {
-            id: uid(),
-            text: '',
-            done: false,
-            priority: 'medium',
-            dueAt: null,
-            remindedAt: null,
-          },
-        ];
-
   const doneCount = localTodos.filter((t) => t.done).length;
   const totalCount = localTodos.filter((t) => t.text.trim()).length;
 
@@ -395,7 +390,7 @@ export default function InlineChecklist({ todos = [], onChange }) {
       )}
 
       <div className="checklist-rows">
-        {displayTodos.map((todo) => (
+        {localTodos.map((todo) => (
           <ChecklistRow
             key={todo.id}
             todo={todo}
