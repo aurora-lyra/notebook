@@ -70,9 +70,16 @@ export default function SwipeableRow({
   );
 
   const handleAction = useCallback(
-    (action) => {
-      animate(x, 0, { type: 'spring', stiffness: 400, damping: 30 });
-      setTimeout(() => action?.(), 80);
+    (action, shouldCollapse = false) => {
+      if (shouldCollapse) {
+        setIsCollapsing(true);
+        const rowW = rowRef.current?.offsetWidth || 300;
+        animate(x, -rowW, { type: 'spring', stiffness: 300, damping: 30 });
+        setTimeout(() => action?.(), 350);
+      } else {
+        animate(x, 0, { type: 'spring', stiffness: 400, damping: 30 });
+        setTimeout(() => action?.(), 80);
+      }
     },
     [x],
   );
@@ -98,7 +105,7 @@ export default function SwipeableRow({
           <span className="text-[10px] mt-0.5">{isPinned ? '已置顶' : '置顶'}</span>
         </button>
         <button
-          onClick={() => handleAction(onDelete)}
+          onClick={() => handleAction(onDelete, true)}
           className="swipe-action-btn bg-red-500/80 backdrop-blur-md"
         >
           <Trash2 size={16} />
