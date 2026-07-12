@@ -99,13 +99,19 @@ export default function ChangePasswordModal({ open, onClose, onSubmit, onSignOut
         bg-black/50 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="w-full max-w-sm bg-surface-raised border border-border rounded-xl shadow-lg overflow-hidden">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="change-password-title"
+        className="w-full max-w-sm bg-surface-raised border border-border rounded-xl shadow-lg overflow-hidden"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <h2 className="text-sm font-semibold text-ink">修改密码</h2>
+          <h2 id="change-password-title" className="text-sm font-semibold text-ink">修改密码</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-ink-tertiary hover:bg-surface-hover transition-colors"
+            aria-label="关闭"
+            className="p-2 rounded-md text-ink-tertiary hover:bg-surface-hover transition-colors"
           >
             <X size={16} />
           </button>
@@ -147,7 +153,8 @@ export default function ChangePasswordModal({ open, onClose, onSubmit, onSignOut
                 <button
                   type="button"
                   onClick={() => setShowCurrent(!showCurrent)}
-                  className="p-0.5 text-ink-faint hover:text-ink-tertiary transition-colors"
+                  aria-label={showCurrent ? '隐藏密码' : '显示密码'}
+                  className="p-2 -m-2 text-ink-faint hover:text-ink-tertiary transition-colors"
                 >
                   {showCurrent ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
@@ -170,7 +177,8 @@ export default function ChangePasswordModal({ open, onClose, onSubmit, onSignOut
                 <button
                   type="button"
                   onClick={() => setShowNew(!showNew)}
-                  className="p-0.5 text-ink-faint hover:text-ink-tertiary transition-colors"
+                  aria-label={showNew ? '隐藏密码' : '显示密码'}
+                  className="p-2 -m-2 text-ink-faint hover:text-ink-tertiary transition-colors"
                 >
                   {showNew ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>

@@ -239,7 +239,7 @@ export default function YearInPixels({ entries }) {
                     const entry = entryMap[key];
                     return (
                       <Pixel
-                        key={`c-${monthIdx}`}
+                        key={`c-${monthIdx}-${day}`}
                         date={date}
                         mood={entry?.mood || null}
                         title={entry?.title || ''}

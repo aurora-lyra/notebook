@@ -807,11 +807,13 @@ button img {
   background: rgba(255, 255, 255, 0.02);
 }
 
-/* Checkbox — circular */
+/* Checkbox — circular (44px touch target, 24px visual) */
 .checklist-checkbox {
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
+  margin: -10px;
+  padding: 10px;
   border-radius: 50%;
   border: 1.5px solid var(--color-border-strong);
   display: flex;
@@ -820,6 +822,8 @@ button img {
   transition: all 0.25s var(--ease-zen);
   cursor: pointer;
   color: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 .checklist-checkbox:hover {
@@ -892,7 +896,7 @@ button img {
   border-color: rgba(248, 113, 113, 0.15);
 }
 
-/* Ghost controls — appear on hover */
+/* Ghost controls — appear on hover, always visible on touch */
 .checklist-controls {
   display: flex;
   align-items: center;
@@ -906,12 +910,18 @@ button img {
   opacity: 1;
 }
 
+@media (hover: none) {
+  .checklist-controls {
+    opacity: 1;
+  }
+}
+
 .checklist-ghost-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-md);
   color: var(--color-ink-faint);
   transition: all 0.15s var(--ease-out);

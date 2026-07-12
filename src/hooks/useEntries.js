@@ -114,6 +114,7 @@ export function useEntries(filter = {}, syncVersion = 0) {
   const batchRemove = useCallback(
     (ids) => {
       const deleted = [];
+      const idSet = new Set(ids);
       for (const id of ids) {
         const entry = db.getEntry(id);
         if (entry) {
@@ -123,7 +124,7 @@ export function useEntries(filter = {}, syncVersion = 0) {
           deleted.push(entry);
         }
       }
-      setEntries((prev) => prev.filter((e) => !ids.includes(e.id)));
+      setEntries((prev) => prev.filter((e) => !idSet.has(e.id)));
       return deleted;
     },
     [],

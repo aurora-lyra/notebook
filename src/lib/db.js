@@ -163,7 +163,11 @@ export function saveDraftLocal(entryId, patch) {
     const existing = JSON.parse(localStorage.getItem(draftKey(entryId))) || {};
     const merged = { ...existing, ...patch, _updatedAt: Date.now() };
     localStorage.setItem(draftKey(entryId), JSON.stringify(merged));
-  } catch { /* ignore quota errors */ }
+  } catch (err) {
+    if (err.name === 'QuotaExceededError') {
+      console.warn('[DB] localStorage quota exceeded — draft not saved:', entryId);
+    }
+  }
 }
 
 /** Read a draft from localStorage. */

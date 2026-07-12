@@ -366,8 +366,9 @@ async function pullEntries(userId) {
   }
 
   // Keep local-only entries that weren't in remote (pending push)
+  const remoteIds = new Set(remotes.map((r) => r.id));
   for (const local of locals) {
-    if (!remotes.find((r) => r.id === local.id)) {
+    if (!remoteIds.has(local.id)) {
       merged.push(local);
     }
   }
